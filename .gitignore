@@ -4,3 +4,5 @@ node_modules/
 .env*.local
 .next
 storage/
+tsconfig.tsbuildinfo
+next-env.d.ts
