@@ -1,0 +1,10 @@
+{
+  "name": "form-like",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @formlike/web dev",
+    "build": "pnpm --filter @formlike/web build",
+    "start": "pnpm --filter @formlike/web start",
+    "typecheck": "pnpm --filter @formlike/web typecheck"
+  }
+}

@@ -1,0 +1,31 @@
+import mongoose from "mongoose";
+
+type MongooseCache = {
+  conn: typeof mongoose | null;
+  promise: Promise<typeof mongoose> | null;
+};
+
+const globalRef = globalThis as unknown as { __formlikeMongoose?: MongooseCache };
+
+const cached: MongooseCache = (globalRef.__formlikeMongoose ??= {
+  conn: null,
+  promise: null,
+});
+
+export async function connectDb(): Promise<typeof mongoose> {
+  if (cached.conn) return cached.conn;
+  if (!cached.promise) {
+    const uri = process.env.MONGODB_URI;
+    if (!uri) throw new Error("MONGODB_URI is not configured");
+    // A rejected connect must not stay memoized: when DNS/network is down at
+    // boot, a poisoned promise would 500 every DB route until restart.
+    cached.promise = mongoose
+      .connect(uri, { serverSelectionTimeoutMS: 10_000 })
+      .catch((err: unknown) => {
+        cached.promise = null;
+        throw err;
+      });
+  }
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
