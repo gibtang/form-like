@@ -1,0 +1,137 @@
+{
+  "project": "Prompt Form SaaS",
+  "status": "design-decisions-accepted",
+  "accepted": {
+    "initial_audience": "Small SaaS teams collecting customer feedback",
+    "example_prompt": "Create a feedback form asking about satisfaction, missing features, and permission to follow up.",
+    "creation": "Natural-language prompts with a form preview",
+    "ai_roles": {
+      "text_generation": "Draft questions, descriptions, answer options, and requested edits",
+      "jev": "Select controls and presentation from a supplied component catalogue"
+    },
+    "editing": [
+      "Follow-up prompts for substantial changes",
+      "Direct controls for wording, options, and required status"
+    ],
+    "publishing": {
+      "respondent_experience": "Fixed published form version rather than an AI-generated interview for each respondent",
+      "updates": "Save edits as a draft and require explicit Publish update",
+      "public_link": "Stable across updates",
+      "historical_submissions": "Retain the original question wording and form version",
+      "in_progress_sessions": "Respondents finish the version they opened; new visitors receive latest publication"
+    },
+    "creator_authentication": {
+      "method": "Email and password",
+      "library": "Auth.js / NextAuth.js",
+      "provider": "Credentials",
+      "signup": true,
+      "email_verification": true,
+      "password_reset": true,
+      "password_visibility_toggle": true
+    },
+    "distribution": {
+      "source": "Open source",
+      "reference_project": "Postdrop",
+      "proprietary_generation_instructions": "Private server-side environment configuration; actual instructions excluded from public source and example configuration",
+      "license": "Apache-2.0",
+      "starter_instructions": "Functional generic public starter prompt, replaceable by self-hosters",
+      "hosted_instructions": "Private server-side env override",
+      "self_hosted_keys": "Operator supplies text-generation and Jev API keys"
+    },
+    "hosted_service": {
+      "pricing": "Initially free",
+      "ai_usage": "20 AI operations per verified account per UTC day, enforced on the server",
+      "public_submissions": "No AI calls during respondent form completion or submission"
+    },
+    "form_features": {
+      "field_types": [
+        "Short text",
+        "Long text",
+        "Email",
+        "Number",
+        "Date",
+        "Single choice",
+        "Multiple choice",
+        "Rating"
+      ],
+      "required_fields": true,
+      "branching": "Simple configured conditional visibility based on another answer"
+    },
+    "submission_features": [
+      "Submissions table",
+      "Individual submission view",
+      "CSV export",
+      "Optional email notifications"
+    ],
+    "ai_edit_review": {
+      "review": "Preview and change summary with Apply or Discard",
+      "undo": "Available after applying an AI edit",
+      "unsupported_requests": "Explain limitation and offer supported alternative"
+    },
+    "respondent_access": {
+      "account_required": false,
+      "identification": "Explicit creator-configured name/email fields"
+    },
+    "ownership": "One owner per form in the initial release",
+    "form_lifecycle": {
+      "close_and_reopen": true,
+      "closure": "Stops submissions across versions and displays a clear message at the public link",
+      "archive": true,
+      "delete_submission": true,
+      "permanent_form_deletion": "Requires explicit confirmation and removes form submissions"
+    },
+    "stack": [
+      "Next.js",
+      "TypeScript",
+      "MongoDB",
+      "Auth.js Credentials",
+      "Tailwind",
+      "shadcn/ui",
+      "Node.js 22+",
+      "Docker deployment to Coolify"
+    ],
+    "text_generation": {
+      "provider": "OpenAI Responses API",
+      "model": "gpt-5.4-mini-2026-03-17",
+      "output": "Structured form definitions and edits checked by application validation",
+      "configuration": "Model ID configurable through server environment"
+    },
+    "jev": {
+      "model": "jev-1.14.0",
+      "configuration": "Pinned default; server environment override",
+      "scope": "Choose controls/presentation from a supported form catalogue"
+    },
+    "hosted_allowances": {
+      "ai_operations_per_verified_account_per_utc_day": 20,
+      "max_fields_per_form": 30,
+      "account_concurrent_ai_operations": 1,
+      "failed_operation": "No daily allowance consumed when no valid edit proposal is produced; failed attempts still rate limited",
+      "successful_proposal": "Consumes one operation even if discarded",
+      "operator_controls": "Configurable request/token bounds, global daily AI spend cutoff, and request rate limits",
+      "semantics": "Server-side enforcement; public submissions and manual editing do not consume AI operations"
+    }
+  },
+  "open": [],
+  "references": {
+    "postdrop": {
+      "path": "/Users/gibson.tang/Dropbox/my-files/code/postdrop",
+      "license": "Apache-2.0",
+      "self_hosting": true,
+      "billing": "No billing in current operations documentation",
+      "authentication": "Auth.js Credentials email/password; also supports Google",
+      "environment_template": "apps/web/.env.example",
+      "ai_prompt_pattern": "No existing AI prompt configuration found"
+    }
+  },
+  "implementation_started": false,
+  "deployment_inputs": [
+    "Product name and domain",
+    "Private hosted generation instructions",
+    "OpenAI and TypeSafe account access and keys",
+    "MongoDB connection and authentication secrets",
+    "Email sender configuration",
+    "Hosted global daily AI budget",
+    "Required analytics and error-reporting service configuration"
+  ],
+  "brief": "BUILD-BRIEF.md"
+}
