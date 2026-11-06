@@ -7,6 +7,8 @@ import { newIdClient } from "@/lib/client-ids";
 import { FormRenderer } from "@/components/form/form-renderer";
 import { updateDraftAction, proposeAction, type DraftSaveResult } from "../../actions";
 import type { ProposalResult } from "@/lib/ai/generate";
+import { LifecycleBar } from "./lifecycle-bar";
+import { NotifySettings } from "./notify-settings";
 import { cn } from "@/lib/cn";
 
 const TYPE_LABELS: Record<FieldType, string> = {
@@ -27,9 +29,16 @@ function isChoice(type: FieldType): boolean {
 interface DraftEditorProps {
   formId: string;
   initialDefinition: FormDefinition;
+  notifyEmail: string | null;
+  lifecycle: {
+    status: string;
+    latestVersionNumber: number | null;
+    publicUrl: string | null;
+    title: string;
+  };
 }
 
-export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
+export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle }: DraftEditorProps) {
   const [def, setDef] = useState<FormDefinition>(initialDefinition);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -146,20 +155,27 @@ export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
           <Link href="/dashboard" className="text-sm text-[var(--text-muted)] hover:underline">
             ← All forms
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-[var(--text-muted)]">
-              {def.fields.length}/{MAX_FIELDS_PER_FORM} fields
-            </span>
-            <button
-              type="button"
-              onClick={save}
-              data-testid="save-draft"
-              disabled={pending}
-              className="h-9 rounded-lg bg-[var(--accent)] px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-            >
-              {pending ? "Saving…" : "Save draft"}
-            </button>
-          </div>
+        </div>
+        <LifecycleBar
+          formId={formId}
+          title={def.title}
+          status={lifecycle.status}
+          latestVersionNumber={lifecycle.latestVersionNumber}
+          publicUrl={lifecycle.publicUrl}
+        />
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-[var(--text-muted)]">
+            {def.fields.length}/{MAX_FIELDS_PER_FORM} fields
+          </span>
+          <button
+            type="button"
+            onClick={save}
+            data-testid="save-draft"
+            disabled={pending}
+            className="h-9 rounded-lg bg-[var(--accent)] px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {pending ? "Saving…" : "Save draft"}
+          </button>
         </div>
         {saveState && (
           <p
@@ -224,6 +240,8 @@ export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
             )}
           </div>
         </div>
+
+        <NotifySettings formId={formId} initialEmail={notifyEmail} />
 
         <div className="space-y-2 rounded-lg border border-[var(--border)] bg-white p-4">
           <label className="block text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Title</label>

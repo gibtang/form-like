@@ -5,7 +5,7 @@ export function c32hex(): string {
   return randomBytes(16).toString("hex");
 }
 
-export type IdPrefix = "fld_" | "opt_" | "frm_" | "ver_" | "sub_";
+export type IdPrefix = "fld_" | "opt_" | "frm_" | "ver_" | "sub_" | "tok_";
 
 export function newId(prefix: IdPrefix): string {
   return prefix + c32hex();

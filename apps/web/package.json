@@ -11,8 +11,10 @@
   "dependencies": {
     "@auth/mongodb-adapter": "^3.7.0",
     "@aws-sdk/client-sesv2": "^3.1161.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@openrouter/ai-sdk-provider": "^2.10.0",
     "@radix-ui/react-slot": "^1.1.0",
+    "@sentry/nextjs": "^11.11.0",
     "ai": "^6.0.323",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
@@ -32,6 +34,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.0"
   }
 }

@@ -106,6 +106,8 @@ const formSchema = new Schema(
     },
     versionCounter: { type: Number, required: true, default: 0 },
     latestVersionId: { type: String, default: null },
+    /** Optional creator notification address for new submissions. */
+    notifyEmail: { type: String, default: null },
     closedAt: { type: Date, default: null },
     archivedAt: { type: Date, default: null },
     createdAt: { type: Date, required: true, default: () => new Date() },
@@ -188,3 +190,24 @@ export const FormVersion: Model<FormVersionDoc> =
 export const Submission: Model<SubmissionDoc> =
   (mongoose.models.Submission as Model<SubmissionDoc>) ??
   mongoose.model<SubmissionDoc>("Submission", submissionSchema);
+
+/** Bearer tokens for the authenticated MCP server (fl_live_…). */
+const apiTokenSchema = new Schema(
+  {
+    tokenId: { type: String, required: true, default: () => newId("tok_"), unique: true },
+    userId: { type: String, required: true },
+    name: { type: String, required: true },
+    keyHash: { type: String, required: true, unique: true },
+    keyPrefix: { type: String, required: true },
+    revokedAt: { type: Date, default: null },
+    lastUsedAt: { type: Date, default: null },
+    createdAt: { type: Date, required: true, default: () => new Date() },
+  },
+  { collection: "api_tokens" },
+);
+apiTokenSchema.index({ userId: 1 });
+
+export type ApiTokenDoc = mongoose.HydratedDocument<InferSchemaType<typeof apiTokenSchema>>;
+
+export const ApiToken: Model<ApiTokenDoc> =
+  (mongoose.models.ApiToken as Model<ApiTokenDoc>) ?? mongoose.model<ApiTokenDoc>("ApiToken", apiTokenSchema);

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth-user";
 import { connectDb } from "@/lib/db";
-import { Form } from "@/lib/models";
+import { Form, FormVersion } from "@/lib/models";
 import { formDefinitionSchema, type FormDefinition } from "@/lib/form-schema";
 import { DraftEditor } from "./editor";
 
@@ -25,6 +25,22 @@ export default async function FormEditorPage({ params }: { params: Promise<{ for
 
   const parsed = formDefinitionSchema.safeParse(form.draft);
   const definition = parsed.success ? parsed.data : STARTER;
+  const latest = form.latestVersionId
+    ? await FormVersion.findOne({ formId: form.formId, versionId: form.latestVersionId }).lean()
+    : null;
+  const publicUrl = form.latestVersionId ? `${process.env.BASE_URL ?? "http://localhost:3000"}/f/${form.formId}` : null;
 
-  return <DraftEditor formId={formId} initialDefinition={definition} />;
+  return (
+    <DraftEditor
+      formId={formId}
+      initialDefinition={definition}
+      notifyEmail={form.notifyEmail ?? null}
+      lifecycle={{
+        status: form.status,
+        latestVersionNumber: latest?.versionNumber ?? null,
+        publicUrl,
+        title: form.title,
+      }}
+    />
+  );
 }
