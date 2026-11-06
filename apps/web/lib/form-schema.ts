@@ -1,12 +1,16 @@
 import { z } from "zod";
-import { isId } from "./ids";
 
 /**
  * The one validation contract used by direct edits, previews, publication,
  * and (later) AI proposals and public submission processing (BUILD-BRIEF
  * "Forms and presentation"). Everything validates a full definition against
  * the accepted field catalogue and conditional-rule constraints.
+ *
+ * MUST stay free of node:* imports: client components (editor, preview,
+ * public renderer) import this module.
  */
+
+const idPattern = (prefix: string): RegExp => new RegExp(`^${prefix}[0-9a-f]{32}$`);
 
 export const FIELD_TYPES = [
   "short_text",
@@ -38,7 +42,7 @@ export const CONDITIONAL_OPERATORS = [
 export type ConditionalOperator = (typeof CONDITIONAL_OPERATORS)[number];
 
 /** Operators each field type can serve as a rule source. */
-const OPERATORS_BY_SOURCE_TYPE: Record<FieldType, readonly ConditionalOperator[]> = {
+export const OPERATORS_BY_SOURCE_TYPE: Record<FieldType, readonly ConditionalOperator[]> = {
   single_choice: ["eq", "neq"],
   multiple_choice: ["includes", "not_includes"],
   number: ["eq", "neq", "lt", "lte", "gt", "gte"],
@@ -49,8 +53,8 @@ const OPERATORS_BY_SOURCE_TYPE: Record<FieldType, readonly ConditionalOperator[]
   date: ["eq", "neq"],
 };
 
-const fieldIdSchema = z.string().refine((v) => isId("fld_", v), "Invalid field id");
-const optionIdSchema = z.string().refine((v) => isId("opt_", v), "Invalid option id");
+const fieldIdSchema = z.string().refine((v) => idPattern("fld_").test(v), "Invalid field id");
+const optionIdSchema = z.string().refine((v) => idPattern("opt_").test(v), "Invalid option id");
 
 export const optionSchema = z.object({
   optionId: optionIdSchema,
