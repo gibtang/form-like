@@ -24,23 +24,24 @@ export function FieldInput({ field, value, error, onChange }: FieldInputProps) {
   const set = (v: AnswerValue) => onChange(field.fieldId, v);
   const inputId = `f-input-${field.fieldId}`;
   const labeled = ["short_text", "long_text", "email", "number", "date"].includes(field.type);
+  const ph = field.placeholder ?? undefined;
 
   let control: React.ReactNode;
   switch (field.type) {
     case "short_text":
-      control = <input className={controlClasses} type="text" id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
+      control = <input placeholder={ph} className={controlClasses} type="text" id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
       break;
     case "long_text":
-      control = <textarea className={cn(controlClasses, "min-h-24")} id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
+      control = <textarea placeholder={ph} className={cn(controlClasses, "min-h-24")} id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
       break;
     case "email":
-      control = <input className={controlClasses} type="email" id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
+      control = <input placeholder={ph} className={controlClasses} type="email" id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
       break;
     case "number":
-      control = <input className={controlClasses} type="number" id={inputId} step="any" value={typeof value === "string" || typeof value === "number" ? String(value) : ""} onChange={(e) => set(e.target.value === "" ? null : e.target.value)} />;
+      control = <input placeholder={ph} className={controlClasses} type="number" id={inputId} step="any" value={typeof value === "string" || typeof value === "number" ? String(value) : ""} onChange={(e) => set(e.target.value === "" ? null : e.target.value)} />;
       break;
     case "date":
-      control = <input className={controlClasses} type="date" id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
+      control = <input placeholder={ph} className={controlClasses} type="date" id={inputId} value={typeof value === "string" ? value : ""} onChange={(e) => set(e.target.value)} />;
       break;
     case "single_choice":
       control = (

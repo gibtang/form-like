@@ -19,6 +19,18 @@ export default function HomePage() {
           <Link href="/login">Sign in</Link>
         </Button>
       </div>
+      <footer className="mt-auto flex w-full items-center justify-center gap-4 pb-6 pt-12 text-xs text-[var(--text-muted)]">
+        <span>© {new Date().getFullYear()} Form-like</span>
+        <Link href="/terms" className="hover:underline">
+          Terms
+        </Link>
+        <Link href="/privacy" className="hover:underline">
+          Privacy
+        </Link>
+        <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer" className="hover:underline">
+          Source (Apache-2.0)
+        </a>
+      </footer>
     </main>
   );
 }

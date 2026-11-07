@@ -79,6 +79,8 @@ export const fieldSchema = z.object({
   options: z.array(optionSchema).max(MAX_OPTIONS_PER_FIELD).nullable().default(null),
   /** rating only: the top of the 1..N scale (default 5). */
   ratingMax: z.number().int().min(2).max(10).nullable().default(null),
+  /** Short example text shown inside the control; presentation only. */
+  placeholder: z.string().max(80).nullable().default(null),
   /** Show this field only when the rule matches the referenced answer. */
   conditionalRule: conditionalRuleSchema.nullable().default(null),
 });

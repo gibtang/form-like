@@ -5,7 +5,10 @@ import Link from "next/link";
 import { MAX_FIELDS_PER_FORM, OPERATORS_BY_SOURCE_TYPE, FIELD_TYPES, type ConditionalOperator, type FieldType, type FormDefinition, type FormField } from "@/lib/form-schema";
 import { newIdClient } from "@/lib/client-ids";
 import { FormRenderer } from "@/components/form/form-renderer";
-import { updateDraftAction, type DraftSaveResult } from "../../actions";
+import { updateDraftAction, proposeAction, type DraftSaveResult } from "../../actions";
+import type { ProposalResult } from "@/lib/ai/generate";
+import { LifecycleBar } from "./lifecycle-bar";
+import { NotifySettings } from "./notify-settings";
 import { cn } from "@/lib/cn";
 
 const TYPE_LABELS: Record<FieldType, string> = {
@@ -26,17 +29,67 @@ function isChoice(type: FieldType): boolean {
 interface DraftEditorProps {
   formId: string;
   initialDefinition: FormDefinition;
+  notifyEmail: string | null;
+  lifecycle: {
+    status: string;
+    latestVersionNumber: number | null;
+    publicUrl: string | null;
+    title: string;
+  };
 }
 
-export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
+export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle }: DraftEditorProps) {
   const [def, setDef] = useState<FormDefinition>(initialDefinition);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [saveState, setSaveState] = useState<DraftSaveResult | null>(null);
   const [pending, startTransition] = useTransition();
+  const [prompt, setPrompt] = useState("");
+  const [proposing, setProposing] = useState(false);
+  const [proposal, setProposal] = useState<ProposalResult | null>(null);
+  const [proposalAnswers, setProposalAnswers] = useState<Record<string, unknown>>({});
+  const [undoSnapshot, setUndoSnapshot] = useState<FormDefinition | null>(null);
 
   const atCap = def.fields.length >= MAX_FIELDS_PER_FORM;
   const fieldsById = new Map(def.fields.map((f) => [f.fieldId, f]));
+
+  function generate(): void {
+    if (prompt.trim().length === 0 || proposing) return;
+    setProposing(true);
+    setSaveState(null);
+    startTransition(async () => {
+      try {
+        const result = await proposeAction(formId, prompt);
+        setProposal(result);
+        setProposalAnswers({});
+        if (result.supported) setUndoSnapshot(null);
+      } finally {
+        setProposing(false);
+      }
+    });
+  }
+
+  function applyProposal(): void {
+    if (!proposal?.supported) return;
+    setUndoSnapshot(def);
+    setDef(proposal.definition);
+    setProposal(null);
+    setAnswers({});
+    setTouched({});
+  }
+
+  function discardProposal(): void {
+    setProposal(null);
+    setProposalAnswers({});
+  }
+
+  function undoApply(): void {
+    if (!undoSnapshot) return;
+    setDef(undoSnapshot);
+    setUndoSnapshot(null);
+    setAnswers({});
+    setTouched({});
+  }
 
   function patchField(fieldId: string, patch: Partial<FormField>): void {
     setDef((d) => ({ ...d, fields: d.fields.map((f) => (f.fieldId === fieldId ? { ...f, ...patch } : f)) }));
@@ -47,6 +100,7 @@ export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
       type,
       options: isChoice(type) ? [{ optionId: newIdClient("opt_"), label: "Option 1" }] : null,
       ratingMax: type === "rating" ? 5 : null,
+      placeholder: null,
     });
   }
 
@@ -64,6 +118,7 @@ export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
           required: false,
           options: isChoice(type) ? [{ optionId: newIdClient("opt_"), label: "Option 1" }] : null,
           ratingMax: type === "rating" ? 5 : null,
+          placeholder: null,
           conditionalRule: null,
         },
       ],
@@ -100,20 +155,27 @@ export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
           <Link href="/dashboard" className="text-sm text-[var(--text-muted)] hover:underline">
             ← All forms
           </Link>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-[var(--text-muted)]">
-              {def.fields.length}/{MAX_FIELDS_PER_FORM} fields
-            </span>
-            <button
-              type="button"
-              onClick={save}
-              data-testid="save-draft"
-              disabled={pending}
-              className="h-9 rounded-lg bg-[var(--accent)] px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-            >
-              {pending ? "Saving…" : "Save draft"}
-            </button>
-          </div>
+        </div>
+        <LifecycleBar
+          formId={formId}
+          title={def.title}
+          status={lifecycle.status}
+          latestVersionNumber={lifecycle.latestVersionNumber}
+          publicUrl={lifecycle.publicUrl}
+        />
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-[var(--text-muted)]">
+            {def.fields.length}/{MAX_FIELDS_PER_FORM} fields
+          </span>
+          <button
+            type="button"
+            onClick={save}
+            data-testid="save-draft"
+            disabled={pending}
+            className="h-9 rounded-lg bg-[var(--accent)] px-4 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+          >
+            {pending ? "Saving…" : "Save draft"}
+          </button>
         </div>
         {saveState && (
           <p
@@ -142,6 +204,44 @@ export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
             </ul>
           </div>
         )}
+
+        <div className="space-y-2 rounded-lg border border-[var(--border)] bg-white p-4">
+          <label htmlFor="ai-prompt" className="block text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
+            Describe the form or change
+          </label>
+          <textarea
+            id="ai-prompt"
+            data-testid="ai-prompt"
+            className="min-h-16 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent)] focus:outline-none"
+            placeholder='e.g. "Create a customer feedback form asking about satisfaction, missing features, and permission to follow up"'
+            value={prompt}
+            maxLength={4000}
+            onChange={(e) => setPrompt(e.target.value)}
+          />
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              data-testid="generate-proposal"
+              onClick={generate}
+              disabled={proposing || prompt.trim().length === 0}
+              className="h-9 rounded-lg border border-[var(--accent)] px-4 text-sm font-medium text-[var(--accent)] hover:bg-[var(--surface)] disabled:opacity-40"
+            >
+              {proposing ? "Generating proposal…" : "Generate proposal"}
+            </button>
+            {undoSnapshot && (
+              <button
+                type="button"
+                data-testid="undo-apply"
+                onClick={undoApply}
+                className="h-9 rounded-lg border border-[var(--border)] px-3 text-sm text-[var(--text)] hover:bg-[var(--surface)]"
+              >
+                Undo last apply
+              </button>
+            )}
+          </div>
+        </div>
+
+        <NotifySettings formId={formId} initialEmail={notifyEmail} />
 
         <div className="space-y-2 rounded-lg border border-[var(--border)] bg-white p-4">
           <label className="block text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Title</label>
@@ -301,8 +401,51 @@ export function DraftEditor({ formId, initialDefinition }: DraftEditorProps) {
 
       <section className="lg:sticky lg:top-6 lg:h-fit">
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
-          Live preview — answer fields to test conditional visibility and validation
+          {proposal ? "Proposed result — apply or discard" : "Live preview — answer fields to test conditional visibility and validation"}
         </p>
+        {proposal && !proposal.supported && (
+          <div
+            data-testid="proposal-error"
+            className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"
+          >
+            {"explanation" in proposal ? proposal.explanation : proposal.message}
+          </div>
+        )}
+        {proposal?.supported && (
+          <div data-testid="proposal-panel" className="mb-4 space-y-3 rounded-lg border border-[var(--accent)] bg-white p-4">
+            <p className="text-sm text-[var(--text)]">
+              <span className="font-medium">Change summary:</span> {proposal.changeSummary}
+            </p>
+            <div className="rounded-lg border border-[var(--border)] p-4">
+              <FormRenderer
+                definition={proposal.definition}
+                answers={proposalAnswers as never}
+                onChange={(fieldId, value) => setProposalAnswers((a) => ({ ...a, [fieldId]: value }))}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                data-testid="apply-proposal"
+                onClick={applyProposal}
+                className="h-9 rounded-lg bg-[var(--accent)] px-4 text-sm font-medium text-white hover:opacity-90"
+              >
+                Apply
+              </button>
+              <button
+                type="button"
+                data-testid="discard-proposal"
+                onClick={discardProposal}
+                className="h-9 rounded-lg border border-[var(--border)] px-4 text-sm text-[var(--text)] hover:bg-[var(--surface)]"
+              >
+                Discard
+              </button>
+            </div>
+            <p className="text-xs text-[var(--text-muted)]">
+              Applying changes your local draft only — select Save draft to keep it.
+            </p>
+          </div>
+        )}
         <div className="rounded-lg border border-[var(--border)] bg-white p-6">
           <FormRenderer
             definition={def}

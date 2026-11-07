@@ -110,3 +110,30 @@ export async function sendPasswordResetEmail(user: UserLike, url: string): Promi
     text,
   });
 }
+
+export async function sendSubmissionNotification(input: {
+  to: string;
+  formTitle: string;
+  submittedAt: Date;
+  summaryHtml: string;
+  detailUrl: string;
+}): Promise<boolean> {
+  const subject = `New submission — ${input.formTitle}`;
+  const bodyHtml = `<p style="margin:0 0 16px;font-size:14px">A new submission arrived at ${escapeHtml(
+    input.submittedAt.toLocaleString(),
+  )}.</p>
+${input.summaryHtml}
+<p style="margin:16px 0 0;font-size:14px">Open your dashboard to review all submissions.</p>`;
+  const text = `A new submission arrived at ${input.submittedAt.toLocaleString()} for "${input.formTitle}".\n${input.detailUrl}`;
+  return sendEmail({
+    to: input.to,
+    subject,
+    html: brandedHtml({
+      heading: subject,
+      bodyHtml,
+      buttonUrl: input.detailUrl,
+      buttonText: "View submissions",
+    }),
+    text,
+  });
+}

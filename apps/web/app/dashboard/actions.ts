@@ -6,7 +6,9 @@ import { requireUser } from "@/lib/auth-user";
 import { connectDb } from "@/lib/db";
 import { Form } from "@/lib/models";
 import { newId } from "@/lib/ids";
-import { validateFormDefinition, type FormDefinition, type DefinitionIssue } from "@/lib/form-schema";
+import { formDefinitionSchema, validateFormDefinition, type FormDefinition, type DefinitionIssue } from "@/lib/form-schema";
+import { generateFormProposal } from "@/lib/ai/generate";
+import type { ProposalResult } from "@/lib/ai/generate";
 
 export interface DraftSaveResult {
   ok: boolean;
@@ -67,10 +69,26 @@ export async function updateDraftAction(formId: string, definition: FormDefiniti
   return { ok: true, issues: [] };
 }
 
-/** Resolves the request origin for absolute URL construction. */
-export async function origin(): Promise<string> {
-  const h = await headers();
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  const host = h.get("host") ?? "localhost:3000";
-  return `${proto}://${host}`;
+/**
+ * Generates an AI proposal (create or edit) for this form. Ownership and
+ * the current draft are resolved server-side; the model never sees another
+ * creator's data and cannot write anything — only the explicit Apply path
+ * (client state) followed by Save draft touches storage.
+ */
+export async function proposeAction(formId: string, prompt: string): Promise<ProposalResult> {
+  const user = await requireUser();
+  if (!user) {
+    return { supported: false, error: "provider_failure", message: "Not signed in." };
+  }
+  if (prompt.trim().length === 0) {
+    return { supported: false, error: "provider_failure", message: "Describe the form or change you want." };
+  }
+  await connectDb();
+  const form = await Form.findOne({ formId, ownerId: String(user._id) }).lean();
+  if (!form) {
+    return { supported: false, error: "provider_failure", message: "Form not found." };
+  }
+  const parsed = formDefinitionSchema.safeParse(form.draft);
+  const current = parsed.success ? parsed.data : null;
+  return generateFormProposal({ accountId: String(user._id), prompt: prompt.trim(), current });
 }
