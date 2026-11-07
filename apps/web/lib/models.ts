@@ -60,6 +60,7 @@ const fieldSubSchema = new Schema(
       ),
     ],
     ratingMax: { type: Number, default: null },
+    placeholder: { type: String, default: null },
     conditionalRule: {
       type: new Schema(
         {
