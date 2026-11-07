@@ -23,6 +23,12 @@ export default async function DashboardPage() {
           <p className="text-sm text-[var(--text-muted)]">{session?.user?.email}</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/settings"
+            className="h-10 rounded-lg border border-[var(--border)] px-4 text-sm leading-10 hover:bg-[var(--surface)]"
+          >
+            Settings
+          </Link>
           <form action={async () => {
             "use server";
             await createFormAction();
