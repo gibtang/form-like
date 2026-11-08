@@ -1,2 +1,9 @@
 packages:
   - "apps/*"
+
+# pnpm >=10 blocks dependency postinstall scripts by default; esbuild needs
+# its binary installed for Next.js builds (Docker build failed with
+# ERR_PNPM_IGNORED_BUILDS otherwise).
+onlyBuiltDependencies:
+  - esbuild
+
