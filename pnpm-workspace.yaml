@@ -1,9 +1,8 @@
 packages:
   - "apps/*"
 
-# pnpm >=10 blocks dependency postinstall scripts by default; esbuild needs
-# its binary installed for Next.js builds (Docker build failed with
-# ERR_PNPM_IGNORED_BUILDS otherwise).
-onlyBuiltDependencies:
-  - esbuild
-
+# pnpm 10+ blocks dependency postinstall scripts by default; esbuild needs
+# its binary for Next.js builds. Key for pnpm 12 is `allowBuilds` (written by
+# `pnpm approve-builds`); fixes Docker ERR_PNPM_IGNORED_BUILDS.
+allowBuilds:
+  esbuild: true
