@@ -10,6 +10,9 @@ RUN pnpm install --frozen-lockfile
 
 COPY tsconfig.base.json ./
 COPY apps/web apps/web
+# Browser Sentry SDK inlines NEXT_PUBLIC_* at build time; pass as build-arg.
+ARG NEXT_PUBLIC_SENTRY_DSN
+ENV NEXT_PUBLIC_SENTRY_DSN=$NEXT_PUBLIC_SENTRY_DSN
 RUN pnpm --filter @formlike/web build
 
 FROM node:22-alpine AS runner
