@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 640" fill="none" role="img" aria-label="Illustration of a prompt-built form being refined and published">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1120" y2="640" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f4f4ff"/>
+      <stop offset="1" stop-color="#eef1f8"/>
+    </linearGradient>
+    <linearGradient id="accentBar" x1="0" y1="0" x2="200" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#635bff"/>
+      <stop offset="1" stop-color="#8f7bff"/>
+    </linearGradient>
+    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0a2540" flood-opacity="0.10"/>
+    </filter>
+    <filter id="softShadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#0a2540" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1120" height="640" rx="24" fill="url(#bg)"/>
+  <circle cx="120" cy="90" r="180" fill="#635bff" opacity="0.06"/>
+  <circle cx="1010" cy="560" r="220" fill="#635bff" opacity="0.05"/>
+
+  <!-- Step 1: prompt card -->
+  <g filter="url(#cardShadow)">
+    <rect x="56" y="96" width="330" height="150" rx="14" fill="#ffffff"/>
+    <rect x="56" y="96" width="330" height="6" rx="3" fill="url(#accentBar)"/>
+    <text x="82" y="136" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#8a8aa3">PROMPT</text>
+    <text x="82" y="164" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#0a2540">“Create a customer feedback</text>
+    <text x="82" y="186" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#0a2540">form about satisfaction and</text>
+    <text x="82" y="208" font-family="ui-sans-serif, system-ui, sans-serif" font-size="15" fill="#0a2540">permission to follow up.”</text>
+    <circle cx="356" cy="222" r="4" fill="#635bff"/>
+    <circle cx="356" cy="222" r="9" fill="#635bff" opacity="0.25"/>
+  </g>
+
+  <!-- Arrow 1 -->
+  <path d="M398 170 L446 170" stroke="#635bff" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 10"/>
+  <path d="M446 170 l-10 -6 v12 z" fill="#635bff"/>
+
+  <!-- Step 2: AI proposal / editor card -->
+  <g filter="url(#cardShadow)">
+    <rect x="458" y="72" width="360" height="280" rx="14" fill="#ffffff"/>
+    <rect x="458" y="72" width="360" height="6" rx="3" fill="url(#accentBar)"/>
+    <text x="484" y="112" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#8a8aa3">PROPOSAL — REVIEW</text>
+    <text x="484" y="140" font-family="ui-sans-serif, system-ui, sans-serif" font-size="17" font-weight="600" fill="#0a2540">Customer feedback</text>
+
+    <text x="484" y="176" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#0a2540">Overall satisfaction *</text>
+    <g>
+      <rect x="484" y="186" width="34" height="26" rx="6" fill="#635bff"/>
+      <rect x="524" y="186" width="34" height="26" rx="6" fill="#eef0ff"/>
+      <rect x="564" y="186" width="34" height="26" rx="6" fill="#eef0ff"/>
+      <rect x="604" y="186" width="34" height="26" rx="6" fill="#eef0ff"/>
+      <rect x="644" y="186" width="34" height="26" rx="6" fill="#eef0ff"/>
+    </g>
+
+    <text x="484" y="242" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#0a2540">What should we improve?</text>
+    <rect x="484" y="252" width="308" height="34" rx="8" fill="#f6f8fa"/>
+    <rect x="484" y="298" width="308" height="30" rx="8" fill="#f6f8fa"/>
+    <text x="498" y="320" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#425466">show after a low rating</text>
+
+    <rect x="484" y="344" width="100" height="30" rx="8" fill="#635bff"/>
+    <text x="500" y="364" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#ffffff">Apply</text>
+    <rect x="596" y="344" width="100" height="30" rx="8" fill="#ffffff" stroke="#e3e8ee"/>
+    <text x="616" y="364" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#425466">Discard</text>
+  </g>
+
+  <!-- Arrow 2 -->
+  <path d="M830 170 L878 170" stroke="#635bff" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 10"/>
+  <path d="M878 170 l-10 -6 v12 z" fill="#635bff"/>
+
+  <!-- Step 3: published public form -->
+  <g filter="url(#cardShadow)">
+    <rect x="890" y="120" width="180" height="210" rx="14" fill="#ffffff"/>
+    <rect x="890" y="120" width="180" height="6" rx="3" fill="#12b76a"/>
+    <text x="912" y="156" font-family="ui-sans-serif, system-ui, sans-serif" font-size="12" letter-spacing="2" fill="#8a8aa3">LIVE</text>
+    <text x="912" y="182" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" font-weight="600" fill="#0a2540">form-like.com/f/…</text>
+    <rect x="912" y="200" width="136" height="1.5" fill="#e3e8ee"/>
+    <text x="912" y="228" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#0a2540">How satisfied are you?</text>
+    <circle cx="920" cy="250" r="7" fill="#12b76a"/>
+    <circle cx="942" cy="250" r="7" fill="#e3e8ee"/>
+    <circle cx="964" cy="250" r="7" fill="#e3e8ee"/>
+    <circle cx="986" cy="250" r="7" fill="#e3e8ee"/>
+    <circle cx="1008" cy="250" r="7" fill="#e3e8ee"/>
+    <text x="912" y="286" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#0a2540">Anything to add?</text>
+    <rect x="912" y="296" width="136" height="26" rx="6" fill="#f6f8fa"/>
+  </g>
+
+  <!-- Bottom strip: version safety -->
+  <g filter="url(#softShadow)">
+    <rect x="458" y="392" width="360" height="88" rx="14" fill="#0a2540"/>
+    <text x="484" y="428" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" fill="#ffffff">Publishing preserves every version.</text>
+    <text x="484" y="452" font-family="ui-sans-serif, system-ui, sans-serif" font-size="13" fill="#9fb0c9">Respondents always answer the questions they saw.</text>
+  </g>
+</svg>
