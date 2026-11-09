@@ -5,11 +5,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.BASE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Form-like — build forms by describing them",
+    default: "Form-like — good forms start with a prompt",
     template: "%s — Form-like",
   },
   description:
-    "Describe a form in plain English, review the preview, refine it, and publish a stable public link.",
+    "Describe what you want to ask, shape a thoughtful form with a prompt, and share it with one simple link.",
 };
 
 // Owner/test accounts excluded from analytics (BUILD-BRIEF launch rules).

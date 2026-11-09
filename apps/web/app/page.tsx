@@ -1,216 +1,186 @@
+import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/button";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
 
 const steps = [
   {
-    n: "1",
-    title: "Describe it",
-    body: "Type what you need in plain English. “A customer feedback form asking about satisfaction, missing features, and permission to follow up.”",
+    number: "01",
+    title: "Say what you need",
+    description:
+      "Describe the people you’re asking and what you want to learn. Start with the idea, not a blank canvas.",
   },
   {
-    n: "2",
-    title: "Refine it",
-    body: "Review the working preview, then tweak field wording, options, and required status directly — or ask for changes and apply them with one click. Every AI edit shows a summary first, and undo is always available.",
+    number: "02",
+    title: "Make it yours",
+    description:
+      "Review a working draft, then tweak a question yourself or ask for a change in plain language.",
   },
   {
-    n: "3",
-    title: "Publish it",
-    body: "Get a stable public link. Respondents fill in a saved version of the form — no account, no AI calls, no surprises. Submissions land in a table you can export as CSV.",
+    number: "03",
+    title: "Share it anywhere",
+    description:
+      "Publish when it feels right and send one simple link. People can respond without an account.",
   },
 ];
 
-const features = [
-  {
-    title: "Prompt to form, with an escape hatch",
-    body: "AI gets you 90% there; direct edits handle the last 10%. Failed generations never touch your draft.",
-  },
-  {
-    title: "Stable public links",
-    body: "Every publish creates a fixed /f/<id> URL respondents can bookmark. Edits create new saved versions — links never break.",
-  },
-  {
-    title: "Submissions without lock-in",
-    body: "Review responses in a table or one by one, export to CSV any time, and opt in to email notifications for new responses.",
-  },
-  {
-    title: "Only the fields you need",
-    body: "Short and long text, email, number, date, single choice, multiple choice — the building blocks of good feedback forms.",
-  },
-  {
-    title: "Self-hostable, Apache-2.0",
-    body: "The whole product is open source. Run it on your own domain with your own database in an afternoon.",
-  },
-  {
-    title: "Light by design",
-    body: "No account needed to respond, no AI calls at fill-in time, no tracking scripts beyond basic analytics you control.",
-  },
-];
+function Brand() {
+  return (
+    <Link href="/" className="brand" aria-label="Form-like home">
+      <span className="brand-mark" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
+      <span>form-like</span>
+    </Link>
+  );
+}
+
+function HeroPreview() {
+  return (
+    <figure className="hero-art" aria-label="A preview of a prompt-built feedback form">
+      <Image
+        src="/images/form-like-hero.jpg"
+        alt=""
+        fill
+        priority
+        sizes="(max-width: 760px) 100vw, 55vw"
+        className="hero-art-image"
+      />
+      <div className="prompt-note">
+        <span className="prompt-note-icon"><Sparkles size={15} aria-hidden="true" /></span>
+        <span>
+          <span className="prompt-note-label">Your prompt</span>
+          <span className="prompt-note-text">A friendly customer feedback form</span>
+        </span>
+        <Check className="prompt-note-check" size={17} aria-hidden="true" />
+      </div>
+
+      <div className="form-preview">
+        <div className="preview-topbar">
+          <span className="preview-brand-mark" aria-hidden="true"><i /><i /><i /></span>
+          <span className="preview-form-name">Customer feedback</span>
+          <span className="preview-live"><span /> Draft</span>
+        </div>
+        <div className="preview-body">
+          <span className="preview-kicker"><Sparkles size={12} aria-hidden="true" /> FIRST DRAFT</span>
+          <h2>How are we doing?</h2>
+          <p className="preview-intro">A couple of quick questions to help us make things better.</p>
+
+          <div className="preview-question">
+            <span className="preview-question-title">How was your experience?</span>
+            <div className="rating-options" aria-label="Example rating choices">
+              {["Not great", "Okay", "Good", "Great", "Amazing"].map((label, index) => (
+                <span className="rating-option" key={label}>
+                  <span className={index === 3 ? "rating-dot selected" : "rating-dot"}>{index + 1}</span>
+                  <span>{label}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="preview-question">
+            <span className="preview-question-title">What could we improve?</span>
+            <span className="preview-textarea">Share anything that comes to mind…</span>
+          </div>
+          <div className="preview-submit">Send feedback <ArrowRight size={14} aria-hidden="true" /></div>
+        </div>
+      </div>
+
+      <div className="refine-note">
+        <span className="refine-sparkle"><Sparkles size={14} aria-hidden="true" /></span>
+        <span>“Add a question about what’s missing”</span>
+        <ArrowUpRight size={14} aria-hidden="true" />
+      </div>
+    </figure>
+  );
+}
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col">
-      {/* Nav */}
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-6 py-5">
-        <span className="text-lg font-bold tracking-tight text-[var(--text)]">
-          Form-like
-        </span>
-        <nav className="flex items-center gap-2 sm:gap-4">
-          <a
-            href="https://github.com/gibtang/form-like"
-            target="_blank"
-            rel="noreferrer"
-            className="hidden text-sm text-[var(--text-muted)] hover:text-[var(--text)] hover:underline sm:inline"
-          >
-            GitHub
-          </a>
-          <Button variant="secondary" size="sm" asChild>
-            <Link href="/login">Sign in</Link>
-          </Button>
-          <Button size="sm" asChild>
-            <Link href="/signup">Get started</Link>
-          </Button>
-        </nav>
+    <main className="landing-page">
+      <header className="site-header">
+        <div className="header-inner">
+          <Brand />
+          <nav className="header-nav" aria-label="Main navigation">
+            <a href="#how-it-works">How it works</a>
+            <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">
+              Open source <ArrowUpRight size={13} aria-hidden="true" />
+            </a>
+          </nav>
+          <div className="header-actions">
+            <Link href="/login" className="sign-in-link">Sign in</Link>
+            <Link href="/signup" className="header-cta">
+              Get started <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
       </header>
 
-      {/* Hero */}
-      <section className="mx-auto flex w-full max-w-3xl flex-col items-center gap-5 px-6 pb-16 pt-14 text-center sm:pt-20">
-        <span className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-xs font-medium text-[var(--text-muted)]">
-          Open source · Apache-2.0
-        </span>
-        <h1 className="text-4xl font-bold tracking-tight text-[var(--text)] sm:text-5xl">
-          Build forms by describing them.
-        </h1>
-        <p className="max-w-xl text-lg text-[var(--text-muted)]">
-          Describe a form in plain English, review the preview, refine it
-          through prompts or direct edits, and publish a stable public link.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button asChild>
-            <Link href="/signup">Start building — free</Link>
-          </Button>
-          <Button variant="secondary" asChild>
-            <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">
-              Star on GitHub
-            </a>
-          </Button>
-        </div>
-
-        {/* Sample prompt card */}
-        <div className="mt-8 w-full rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 text-left shadow-sm">
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            You type
-          </div>
-          <p className="font-mono text-sm leading-relaxed text-[var(--text)]">
-            “Create a customer feedback form asking about satisfaction, missing
-            features, and permission to follow up.”
+      <section className="hero-section">
+        <div className="hero-copy">
+          <div className="eyebrow"><span className="eyebrow-dot" /> FORMS, MADE SIMPLE</div>
+          <h1>Good forms<br />start with <em>a prompt.</em></h1>
+          <p className="hero-description">
+            Tell Form-like what you want to ask. Get a thoughtful first draft, make it yours, and share it with one link.
           </p>
-          <div className="my-4 border-t border-dashed border-[var(--border)]" />
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
-            You get
+          <div className="hero-actions">
+            <Link href="/signup" className="primary-cta">
+              Create your first form <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+            <a href="#how-it-works" className="text-cta">See how it works <ChevronRight size={16} aria-hidden="true" /></a>
           </div>
-          <div className="flex flex-col gap-2">
-            {[
-              "Overall, how satisfied are you?  (single choice)",
-              "What’s missing?  (long text)",
-              "May we follow up with you?  (yes / no)",
-              "Your email  (email, shown only if follow-up)",
-            ].map((line) => (
-              <div
-                key={line}
-                className="rounded-lg border border-[var(--border)] bg-white px-3 py-2 text-sm text-[var(--text)]"
-              >
-                {line}
-              </div>
-            ))}
+          <div className="hero-footnote">
+            <span className="footnote-check"><Check size={12} aria-hidden="true" /></span>
+            Free to use <span className="footnote-separator">·</span> Open source <span className="footnote-separator">·</span> No design skills needed
           </div>
         </div>
+        <HeroPreview />
       </section>
 
-      {/* How it works */}
-      <section className="border-y border-[var(--border)] bg-[var(--surface)]">
-        <div className="mx-auto w-full max-w-5xl px-6 py-16">
-          <h2 className="mb-10 text-center text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
-            Three steps, start to submissions
-          </h2>
-          <div className="grid gap-6 sm:grid-cols-3">
-            {steps.map((s) => (
-              <div
-                key={s.n}
-                className="rounded-xl border border-[var(--border)] bg-white p-6"
-              >
-                <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--accent)] text-sm font-bold text-white">
-                  {s.n}
-                </div>
-                <h3 className="mb-2 text-lg font-semibold text-[var(--text)]">
-                  {s.title}
-                </h3>
-                <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-                  {s.body}
-                </p>
-              </div>
-            ))}
-          </div>
+      <section className="workflow-section" id="how-it-works">
+        <div className="section-heading">
+          <div className="eyebrow"><span className="eyebrow-dot" /> FROM IDEA TO INBOX</div>
+          <h2>Less fiddling.<br /><em>Better questions.</em></h2>
+          <p>Skip the setup. Spend your time on what you actually want to learn.</p>
         </div>
-      </section>
-
-      {/* Features */}
-      <section className="mx-auto w-full max-w-5xl px-6 py-16">
-        <h2 className="mb-10 text-center text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
-          Small tool, honest features
-        </h2>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {features.map((f) => (
-            <div key={f.title} className="flex flex-col gap-2">
-              <h3 className="text-base font-semibold text-[var(--text)]">
-                {f.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-[var(--text-muted)]">
-                {f.body}
-              </p>
-            </div>
+        <div className="step-grid">
+          {steps.map((step) => (
+            <article className="step-card" key={step.number}>
+              <span className="step-number">{step.number}</span>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      {/* Open source CTA */}
-      <section className="border-t border-[var(--border)] bg-[var(--surface)]">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-6 py-16 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-[var(--text)] sm:text-3xl">
-            Open source, self-hostable, yours
-          </h2>
-          <p className="max-w-xl text-[var(--text-muted)]">
-            Form-like is Apache-2.0 licensed. Read every line, self-host it on
-            your own domain, or shape the roadmap by opening an issue.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Button asChild>
-              <Link href="/signup">Create your first form</Link>
-            </Button>
-            <Button variant="secondary" asChild>
-              <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">
-                Read the source
-              </a>
-            </Button>
-          </div>
+      <section className="closing-section">
+        <div className="closing-sparkle"><Sparkles size={19} aria-hidden="true" /></div>
+        <div>
+          <p className="closing-kicker">A better place to begin</p>
+          <h2>Your next good question<br />is just a sentence away.</h2>
         </div>
+        <Link href="/signup" className="closing-cta">Make a form <ArrowRight size={16} aria-hidden="true" /></Link>
+        <div className="closing-shape closing-shape-one" aria-hidden="true" />
+        <div className="closing-shape closing-shape-two" aria-hidden="true" />
       </section>
 
-      <footer className="flex w-full items-center justify-center gap-4 px-6 pb-8 pt-10 text-xs text-[var(--text-muted)]">
-        <span>© {new Date().getFullYear()} Form-like</span>
-        <Link href="/terms" className="hover:underline">
-          Terms
-        </Link>
-        <Link href="/privacy" className="hover:underline">
-          Privacy
-        </Link>
-        <a
-          href="https://github.com/gibtang/form-like"
-          target="_blank"
-          rel="noreferrer"
-          className="hover:underline"
-        >
-          Source (Apache-2.0)
-        </a>
+      <footer className="site-footer">
+        <Brand />
+        <span className="footer-note">Thoughtful forms, without the busywork.</span>
+        <nav className="footer-links" aria-label="Footer navigation">
+          <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">Source <ArrowUpRight size={12} aria-hidden="true" /></a>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
+        </nav>
+        <span className="copyright">© {new Date().getFullYear()} Form-like</span>
       </footer>
     </main>
   );
