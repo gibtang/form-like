@@ -20,7 +20,7 @@ export async function createApiToken(userId: string, name: string): Promise<NewA
   await ApiToken.create({
     tokenId,
     userId,
-    name: name.trim() || "API token",
+    name: name.trim(),
     keyHash: sha256Hex(token),
     keyPrefix,
   });
