@@ -5,6 +5,12 @@ import { Form, FormVersion, Submission } from "@/lib/models";
 import { formDefinitionSchema } from "@/lib/form-schema";
 import { validationIssues, type AnswerMap } from "@/lib/form-eval";
 import { sendSubmissionNotification } from "@/lib/email";
+import {
+  consumeNotificationSlot,
+  recordNotificationFailure,
+  recordNotificationSuccess,
+  resolveNotificationRecipient,
+} from "@/lib/notification";
 import { withApiErrors } from "@/lib/api-wrap";
 
 export const runtime = "nodejs";
@@ -66,34 +72,44 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
   });
   const created = await Submission.create({ formId, versionId: version.versionId, answers });
 
-  // Optional creator notification — a mail failure must never fail a
-  // recorded submission (fire, log, move on).
-  if (form.notifyEmail) {
+  // Submission notification — on by default for new forms, recipient is the
+  // notifyEmail override or the creator's verified account email. A mail
+  // failure must never fail a recorded submission (fire, log, move on).
+  if (form.emailNotifications && !form.notificationsDisabledAt) {
     try {
-      const origin = req.nextUrl.origin;
-      const def = parsed.data;
-      const summary = def.fields
-        .map((f) => {
-          const a = body.data.answers[f.fieldId];
-          if (a === undefined || a === null || a === "" || (Array.isArray(a) && a.length === 0)) return null;
-          const shown = Array.isArray(a)
-            ? a.map((oid) => f.options?.find((o) => o.optionId === oid)?.label ?? oid).join("; ")
-            : f.type === "rating"
-              ? `${a}/${f.ratingMax ?? 5}`
-              : String(a);
-          return `<p style="margin:0 0 6px;font-size:14px"><strong>${f.label}:</strong> ${shown}</p>`;
-        })
-        .filter(Boolean)
-        .join("");
-      await sendSubmissionNotification({
-        to: form.notifyEmail,
-        formTitle: def.title,
-        submittedAt: new Date(created.submittedAt as unknown as string),
-        summaryHtml: summary,
-        detailUrl: `${origin}/dashboard/forms/${formId}/submissions/${created.submissionId}`,
-      });
+      const recipient = await resolveNotificationRecipient(form);
+      if (recipient && (await consumeNotificationSlot(formId))) {
+        const origin = req.nextUrl.origin;
+        const def = parsed.data;
+        const summary = def.fields
+          .map((f) => {
+            const a = body.data.answers[f.fieldId];
+            if (a === undefined || a === null || a === "" || (Array.isArray(a) && a.length === 0)) return null;
+            const shown = Array.isArray(a)
+              ? a.map((oid) => f.options?.find((o) => o.optionId === oid)?.label ?? oid).join("; ")
+              : f.type === "rating"
+                ? `${a}/${f.ratingMax ?? 5}`
+                : String(a);
+            return `<p style="margin:0 0 6px;font-size:14px"><strong>${f.label}:</strong> ${shown}</p>`;
+          })
+          .filter(Boolean)
+          .join("");
+        const sent = await sendSubmissionNotification({
+          to: recipient,
+          formTitle: def.title,
+          submittedAt: new Date(created.submittedAt as unknown as string),
+          summaryHtml: summary,
+          detailUrl: `${origin}/dashboard/forms/${formId}/submissions/${created.submissionId}`,
+        });
+        if (sent) {
+          await recordNotificationSuccess(formId);
+        } else {
+          await recordNotificationFailure(formId);
+        }
+      }
     } catch (err) {
       console.error("submission notification failed:", err instanceof Error ? err.message : err);
+      await recordNotificationFailure(formId).catch(() => {});
     }
   }
 

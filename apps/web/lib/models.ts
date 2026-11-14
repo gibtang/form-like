@@ -106,8 +106,22 @@ const formSchema = new Schema(
     },
     versionCounter: { type: Number, required: true, default: 0 },
     latestVersionId: { type: String, default: null },
-    /** Optional creator notification address for new submissions. */
+    /** Optional creator notification address; null = creator's verified account email. */
     notifyEmail: { type: String, default: null },
+    /**
+     * Auto-send submission notifications. Schema default true covers new
+     * forms; forms created before this field existed have no value, and an
+     * absent field reads as off so legacy forms stay silent until toggled.
+     */
+    emailNotifications: { type: Boolean, default: true },
+    /** Consecutive failed notification sends; reset on a success. */
+    notificationFailureCount: { type: Number, default: 0 },
+    /** Set after repeated send failures; auto-email stays off until re-enabled. */
+    notificationsDisabledAt: { type: Date, default: null },
+    notificationsDisabledReason: { type: String, default: null },
+    /** Daily send-cap bookkeeping (UTC date string + count). */
+    notificationsSentOn: { type: String, default: null },
+    notificationsSentCount: { type: Number, default: 0 },
     closedAt: { type: Date, default: null },
     archivedAt: { type: Date, default: null },
     createdAt: { type: Date, required: true, default: () => new Date() },
