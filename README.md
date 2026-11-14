@@ -14,6 +14,8 @@ answer a fixed published version — no account, no AI calls on the public path.
 1. **Create** — describe the form ("create a customer feedback form asking
    about satisfaction, missing features, and permission to follow up"). A text
    model drafts the structure; Jev (TypeSafe's decision model) picks controls.
+   No account needed to start: the draft lives in your browser, and you're
+   asked to create an account only when you save it.
 2. **Review** — every proposal shows a rendered preview and a change summary.
    Apply it, discard it, or undo after applying. Nothing touches your draft
    until you apply, and nothing persists until you save.

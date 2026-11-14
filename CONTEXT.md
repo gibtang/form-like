@@ -19,7 +19,7 @@ The operator's instructions guiding how creator prompts become forms and form ed
 _Avoid_: Creator prompt.
 
 **Creator**:
-A person who creates, refines, and publishes a form.
+A person who creates, refines, and publishes a form. A visitor holding a guest draft becomes a creator when the draft is saved.
 _Avoid_: User, when distinguishing the person building a form from the person answering it.
 
 **Respondent**:
@@ -28,6 +28,10 @@ _Avoid_: User, when distinguishing the person answering a form from its creator.
 
 **Draft**:
 A form being prepared or revised by its creator before publication.
+
+**Guest draft**:
+A draft built without a creator account, kept in the visitor's browser until saved into an account. A form does not exist until a guest draft is saved.
+_Avoid_: Anonymous form, when referring to the unsaved browser artifact.
 
 **Published form**:
 A form made available to respondents through a public link, serving the version most recently published by its creator.

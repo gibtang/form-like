@@ -9,8 +9,9 @@ import { signupAction, googleSignInAction, type FormState } from "../actions";
 
 const initial: FormState = {};
 
-export function SignupForm() {
+export function SignupForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState(signupAction, initial);
+  const loginHref = next ? `/login?next=${encodeURIComponent(next)}` : "/login";
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
@@ -18,6 +19,7 @@ export function SignupForm() {
       </CardHeader>
       <CardContent className="space-y-4">
         <form action={googleSignInAction}>
+          <input type="hidden" name="next" value={next ?? ""} />
           <Button type="submit" variant="secondary" className="w-full">
             Continue with Google
           </Button>
@@ -28,6 +30,7 @@ export function SignupForm() {
           <span className="h-px flex-1 bg-[var(--border)]" />
         </div>
         <form action={action} className="space-y-3">
+          <input type="hidden" name="next" value={next ?? ""} />
           <Input name="name" required placeholder="Your name" autoComplete="name" maxLength={200} />
           <Input name="email" type="email" required placeholder="you@example.com" autoComplete="email" />
           <PasswordInput
@@ -48,7 +51,7 @@ export function SignupForm() {
         </form>
         <p className="text-sm text-[var(--text-muted)]">
           Already have an account?{" "}
-          <Link href="/login" className="hover:underline">
+          <Link href={loginHref} className="hover:underline">
             Sign in
           </Link>
         </p>

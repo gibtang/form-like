@@ -32,6 +32,7 @@ export default async function FormEditorPage({ params }: { params: Promise<{ for
 
   return (
     <DraftEditor
+      mode="owner"
       formId={formId}
       initialDefinition={definition}
       notifyEmail={form.notifyEmail ?? null}

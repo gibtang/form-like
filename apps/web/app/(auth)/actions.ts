@@ -20,6 +20,17 @@ const credentialsSchema = z.object({
 
 export type FormState = { error?: string; info?: string };
 
+/**
+ * Post-auth redirect target from the caller's flow (e.g. /create after a
+ * guest save). Same-origin paths only: must start with a single slash —
+ * rejects protocol-relative "//host" and absolute URLs (open redirects).
+ */
+function safeNext(formData: FormData): string | null {
+  const value = formData.get("next");
+  if (typeof value !== "string") return null;
+  return /^\/(?!\/)/.test(value) ? value : null;
+}
+
 async function origin(): Promise<string> {
   const h = await headers();
   const proto = h.get("x-forwarded-proto") ?? "http";
@@ -36,7 +47,7 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/dashboard",
+      redirectTo: safeNext(formData) ?? "/dashboard",
     });
   } catch (err) {
     if (err instanceof AuthError) {
@@ -60,9 +71,9 @@ export async function loginAction(_prev: FormState, formData: FormData): Promise
   return {};
 }
 
-export async function googleSignInAction(): Promise<void> {
+export async function googleSignInAction(formData: FormData): Promise<void> {
   try {
-    await signIn("google", { redirectTo: "/dashboard" });
+    await signIn("google", { redirectTo: safeNext(formData) ?? "/dashboard" });
   } catch (err) {
     // signIn's success path throws NEXT_REDIRECT, which must propagate;
     // only AuthError failures land here.
@@ -102,7 +113,9 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
   revalidatePath("/login");
   // No auto-verify fallback: a failed verification email still creates the
   // account, which stays unverified; login offers a resend path.
-  redirect(verificationEmailSent ? "/login?registered=1" : "/login?mailfail=1");
+  const next = safeNext(formData);
+  const base = verificationEmailSent ? "/login?registered=1" : "/login?mailfail=1";
+  redirect(next ? `${base}&next=${encodeURIComponent(next)}` : base);
 }
 
 export async function resendVerificationAction(_prev: FormState, formData: FormData): Promise<FormState> {
