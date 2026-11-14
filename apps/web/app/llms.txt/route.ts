@@ -34,7 +34,10 @@ Production instance: ${base}
 
 ## For agents (MCP)
 
-- Authenticated MCP server at ${base}/api/mcp (Bearer token from dashboard settings). Tools: list_forms, get_form_submissions. Owner-scoped.
+- Authenticated MCP server at ${base}/api/mcp (Bearer token from dashboard settings). Owner-scoped.
+- Create and edit drafts: create_form (complete definition; you supply fld_/opt_ ids), update_draft (full replace). AI proposals: propose_form / propose_edit return an unsaved definition to persist with create_form / update_draft; they consume the account's daily AI operation quota.
+- Publish lifecycle: publish_form (snapshots a new immutable version), close_form, reopen_form, archive_form, unarchive_form. The public link ${base}/f/<formId> always serves the latest published version.
+- Read: list_forms, get_form_submissions. Form results carry editorUrl (dashboard editor with draft preview) and publicUrl (set once a version is published).
 `;
   return new Response(body, {
     headers: { "Content-Type": "text/plain; charset=utf-8" },
