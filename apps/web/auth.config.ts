@@ -34,7 +34,11 @@ export const authConfig = {
       const isProtected = path.startsWith("/dashboard");
       if (!isAuthed && isProtected) return false; // redirects to pages.signIn
       if (isAuthed && (path === "/login" || path === "/signup")) {
-        return Response.redirect(new URL("/dashboard", request.nextUrl));
+        // Keep a flow's post-auth target (e.g. /create after a guest save);
+        // same-origin paths only.
+        const next = request.nextUrl.searchParams.get("next");
+        const target = next && /^\/(?!\/)/.test(next) ? next : "/dashboard";
+        return Response.redirect(new URL(target, request.nextUrl));
       }
       return true;
     },

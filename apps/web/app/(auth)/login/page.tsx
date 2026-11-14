@@ -24,6 +24,11 @@ const banners: Record<string, string> = {
   google_error: "Google sign-in failed. Try again, or sign in with email and password.",
 };
 
+/** Same-origin path check; mirrors safeNext() in the auth actions. */
+function safeNextParam(value: string | string[] | undefined): string | null {
+  return typeof value === "string" && /^\/(?!\/)/.test(value) ? value : null;
+}
+
 export default async function LoginPage({ searchParams }: LoginProps) {
   const params = await searchParams;
   const authError = flag(params, "error");
@@ -33,6 +38,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
     ) ??
     (authError === "OAuthAccountNotLinked" ? "google_linked" : authError ? "google_error" : null);
   const banner = bannerKey ? banners[bannerKey] : null;
+  const next = safeNextParam(params.next);
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-6">
       {banner && (
@@ -40,7 +46,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
           {banner}
         </p>
       )}
-      <LoginForm />
+      <LoginForm next={next} />
       <Link href="/" className="text-sm text-[var(--text-muted)] hover:underline">
         ← Back to Form-like
       </Link>

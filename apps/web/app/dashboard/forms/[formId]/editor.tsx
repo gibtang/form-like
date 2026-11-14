@@ -1,15 +1,47 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { MAX_FIELDS_PER_FORM, OPERATORS_BY_SOURCE_TYPE, FIELD_TYPES, type ConditionalOperator, type FieldType, type FormDefinition, type FormField } from "@/lib/form-schema";
+import { useRouter } from "next/navigation";
+import { MAX_FIELDS_PER_FORM, OPERATORS_BY_SOURCE_TYPE, FIELD_TYPES, formDefinitionSchema, validateFormDefinition, type ConditionalOperator, type FieldType, type FormDefinition, type FormField } from "@/lib/form-schema";
 import { newIdClient } from "@/lib/client-ids";
 import { FormRenderer } from "@/components/form/form-renderer";
 import { updateDraftAction, proposeAction, type DraftSaveResult } from "../../actions";
+import { createOwnedFormAction, proposeGuestAction } from "../../../create/actions";
 import type { ProposalResult } from "@/lib/ai/generate";
 import { LifecycleBar } from "./lifecycle-bar";
 import { NotifySettings } from "./notify-settings";
 import { cn } from "@/lib/cn";
+
+/** Browser-storage slot for an unsaved guest draft (cleared once persisted). */
+const GUEST_DRAFT_KEY = "formlike.guestDraft";
+
+function loadGuestDraft(): FormDefinition | null {
+  try {
+    const raw = localStorage.getItem(GUEST_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = formDefinitionSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+function storeGuestDraft(definition: FormDefinition): void {
+  try {
+    localStorage.setItem(GUEST_DRAFT_KEY, JSON.stringify(definition));
+  } catch {
+    // Storage unavailable (private mode): the draft lives in component state only.
+  }
+}
+
+function clearGuestDraft(): void {
+  try {
+    localStorage.removeItem(GUEST_DRAFT_KEY);
+  } catch {
+    // Ignore; a stale draft only causes a harmless re-offer on the next visit.
+  }
+}
 
 const TYPE_LABELS: Record<FieldType, string> = {
   short_text: "Short text",
@@ -27,18 +59,25 @@ function isChoice(type: FieldType): boolean {
 }
 
 interface DraftEditorProps {
-  formId: string;
+  /** "owner": a persisted draft in the signed-in creator's dashboard. "guest": unsaved visitor draft on /create. */
+  mode: "owner" | "guest";
   initialDefinition: FormDefinition;
-  notifyEmail: string | null;
-  lifecycle: {
+  /** Owner mode only. */
+  formId?: string;
+  notifyEmail?: string | null;
+  lifecycle?: {
     status: string;
     latestVersionNumber: number | null;
     publicUrl: string | null;
     title: string;
   };
+  /** Guest mode only: whether the visitor already has a session (draft then saves directly). */
+  authed?: boolean;
 }
 
-export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle }: DraftEditorProps) {
+export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail = null, lifecycle, authed = false }: DraftEditorProps) {
+  const isGuest = mode === "guest";
+  const router = useRouter();
   const [def, setDef] = useState<FormDefinition>(initialDefinition);
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -49,6 +88,42 @@ export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle 
   const [proposal, setProposal] = useState<ProposalResult | null>(null);
   const [proposalAnswers, setProposalAnswers] = useState<Record<string, unknown>>({});
   const [undoSnapshot, setUndoSnapshot] = useState<FormDefinition | null>(null);
+  const [authPromptOpen, setAuthPromptOpen] = useState(false);
+  const resumed = useRef(false);
+
+  // Guest drafts persist to browser storage on every change so the draft
+  // survives the signup/login round trip and an accidental tab close.
+  // Writes wait until the mount-time resume below has read the stored draft —
+  // otherwise the starter definition would clobber it on every reload.
+  useEffect(() => {
+    if (isGuest && resumed.current) storeGuestDraft(def);
+  }, [isGuest, def]);
+
+  // Resume once on mount: restore a stored guest draft, and for visitors who
+  // signed in since it was stored, persist it straight into their account.
+  // Runs after hydration: the stored definition may differ from the SSR'd
+  // starter, so restoring happens post-mount rather than in initial state.
+  useEffect(() => {
+    if (!isGuest || resumed.current) return;
+    resumed.current = true;
+    const stored = loadGuestDraft();
+    if (!stored) {
+      storeGuestDraft(def);
+      return;
+    }
+    setDef(stored);
+    if (authed && validateFormDefinition(stored).ok) {
+      startTransition(async () => {
+        const result = await createOwnedFormAction(stored);
+        if (result.ok && result.formId) {
+          clearGuestDraft();
+          router.replace(`/dashboard/forms/${result.formId}`);
+        } else if (!result.needsAuth) {
+          clearGuestDraft(); // unrecoverable stored draft; keep the builder usable
+        }
+      });
+    }
+  }, [isGuest, authed, router]);
 
   const atCap = def.fields.length >= MAX_FIELDS_PER_FORM;
   const fieldsById = new Map(def.fields.map((f) => [f.fieldId, f]));
@@ -59,7 +134,9 @@ export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle 
     setSaveState(null);
     startTransition(async () => {
       try {
-        const result = await proposeAction(formId, prompt);
+        const result = isGuest
+          ? await proposeGuestAction(prompt, def)
+          : await proposeAction(formId, prompt);
         setProposal(result);
         setProposalAnswers({});
         if (result.supported) setUndoSnapshot(null);
@@ -140,6 +217,30 @@ export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle 
   }
 
   function save(): void {
+    if (isGuest) {
+      // Validate before the account prompt so visitors never sign up for a
+      // form that would be rejected.
+      const { ok, issues } = validateFormDefinition(def);
+      if (!ok) {
+        setSaveState({ ok: false, issues });
+        return;
+      }
+      setSaveState(null);
+      startTransition(async () => {
+        const result = await createOwnedFormAction(def);
+        if (result.ok && result.formId) {
+          clearGuestDraft();
+          router.replace(`/dashboard/forms/${result.formId}`);
+          return;
+        }
+        if (result.needsAuth) {
+          setAuthPromptOpen(true);
+          return;
+        }
+        setSaveState({ ok: false, issues: result.issues ?? [], error: result.error });
+      });
+      return;
+    }
     startTransition(async () => {
       const result = await updateDraftAction(formId, def);
       setSaveState(result);
@@ -152,17 +253,32 @@ export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle 
     <main className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 gap-8 p-6 lg:grid-cols-2">
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <Link href="/dashboard" className="text-sm text-[var(--text-muted)] hover:underline">
-            ← All forms
-          </Link>
+          {isGuest ? (
+            <Link href="/" className="text-sm text-[var(--text-muted)] hover:underline">
+              ← Back to home
+            </Link>
+          ) : (
+            <Link href="/dashboard" className="text-sm text-[var(--text-muted)] hover:underline">
+              ← All forms
+            </Link>
+          )}
         </div>
-        <LifecycleBar
-          formId={formId}
-          title={def.title}
-          status={lifecycle.status}
-          latestVersionNumber={lifecycle.latestVersionNumber}
-          publicUrl={lifecycle.publicUrl}
-        />
+        {isGuest ? (
+          <div className="rounded-lg border border-[var(--border)] bg-white px-4 py-3">
+            <p className="text-sm font-medium text-[var(--text)]">{def.title || "Untitled form"}</p>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
+              Draft — not saved yet. Saving keeps it in your account.
+            </p>
+          </div>
+        ) : (
+          <LifecycleBar
+            formId={formId}
+            title={def.title}
+            status={lifecycle?.status ?? "draft"}
+            latestVersionNumber={lifecycle?.latestVersionNumber ?? null}
+            publicUrl={lifecycle?.publicUrl ?? null}
+          />
+        )}
         <div className="flex items-center justify-between">
           <span className="text-xs text-[var(--text-muted)]">
             {def.fields.length}/{MAX_FIELDS_PER_FORM} fields
@@ -241,7 +357,7 @@ export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle 
           </div>
         </div>
 
-        <NotifySettings formId={formId} initialEmail={notifyEmail} />
+        {!isGuest && <NotifySettings formId={formId} initialEmail={notifyEmail ?? null} />}
 
         <div className="space-y-2 rounded-lg border border-[var(--border)] bg-white p-4">
           <label className="block text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Title</label>
@@ -462,6 +578,53 @@ export function DraftEditor({ formId, initialDefinition, notifyEmail, lifecycle 
           form&rsquo;s contract.
         </p>
       </section>
+
+      {isGuest && authPromptOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-6"
+          onClick={() => setAuthPromptOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="save-auth-title"
+            data-testid="save-auth-prompt"
+            className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-white p-6 shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="save-auth-title" className="text-lg font-semibold text-[var(--text)]">
+              Save your form
+            </h2>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
+              Create a free account and <span className="font-medium text-[var(--text)]">{def.title || "Untitled form"}</span>{" "}
+              is saved to it right after. Your draft stays in this browser until then.
+            </p>
+            <div className="mt-5 flex flex-col gap-2">
+              <Link
+                href={`/signup?next=${encodeURIComponent("/create")}`}
+                data-testid="prompt-signup"
+                className="h-9 rounded-lg bg-[var(--accent)] px-4 text-center text-sm font-medium leading-9 text-white hover:opacity-90"
+              >
+                Create account
+              </Link>
+              <Link
+                href={`/login?next=${encodeURIComponent("/create")}`}
+                data-testid="prompt-login"
+                className="h-9 rounded-lg border border-[var(--border)] px-4 text-center text-sm leading-9 text-[var(--text)] hover:bg-[var(--surface)]"
+              >
+                Sign in
+              </Link>
+              <button
+                type="button"
+                onClick={() => setAuthPromptOpen(false)}
+                className="mt-1 text-xs text-[var(--text-muted)] hover:underline"
+              >
+                Not now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -16,7 +16,8 @@ Production instance: ${base}
 
 ## Public pages
 
-- [Home](${base}/): product overview and sign-up.
+- [Home](${base}/): product overview; start building at ${base}/create without an account.
+- [Create a form](${base}/create): open builder; no account needed until you save.
 - [Terms of service](${base}/terms)
 - [Privacy policy](${base}/privacy)
 
@@ -28,6 +29,7 @@ Production instance: ${base}
 
 ## For creators (authenticated)
 
+- Building a draft needs no account: start at ${base}/create, and an account is requested only when saving. The unsaved draft is kept in the browser across the signup/login round trip and lands in the account afterward.
 - Sign up with Google or email/password; email verification is required for password accounts.
 - Submissions are owner-only: table view, per-response detail with the original question wording, CSV export.
 - Optional per-form email notification on new submissions.

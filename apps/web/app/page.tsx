@@ -63,7 +63,7 @@ export default function HomePage() {
         </Link>
         <nav className="landing-nav">
           <Link href="/login">Sign in</Link>
-          <Link href="/signup" className="landing-cta">
+          <Link href="/create" className="landing-cta">
             Get started
           </Link>
         </nav>
@@ -82,7 +82,7 @@ export default function HomePage() {
             </p>
             <div className="landing-hero-actions">
               <Button asChild>
-                <Link href="/signup">Create your first form</Link>
+                <Link href="/create">Create your first form</Link>
               </Button>
               <Button variant="secondary" asChild>
                 <Link href="/login">Sign in</Link>
@@ -191,7 +191,7 @@ export default function HomePage() {
         <section className="landing-cta-band">
           <h2>Your next feedback form is one sentence away.</h2>
           <Button asChild>
-            <Link href="/signup">Get started free</Link>
+            <Link href="/create">Get started free</Link>
           </Button>
         </section>
       </main>

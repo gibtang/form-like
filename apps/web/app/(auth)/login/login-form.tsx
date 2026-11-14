@@ -40,8 +40,9 @@ function ResendVerification() {
   );
 }
 
-export function LoginForm() {
+export function LoginForm({ next }: { next?: string | null }) {
   const [state, action, pending] = useActionState(loginAction, initial);
+  const signupHref = next ? `/signup?next=${encodeURIComponent(next)}` : "/signup";
   return (
     <Card className="w-full max-w-sm">
       <CardHeader>
@@ -49,6 +50,7 @@ export function LoginForm() {
       </CardHeader>
       <CardContent className="space-y-4">
         <form action={googleSignInAction}>
+          <input type="hidden" name="next" value={next ?? ""} />
           <Button type="submit" variant="secondary" className="w-full">
             Continue with Google
           </Button>
@@ -59,6 +61,7 @@ export function LoginForm() {
           <span className="h-px flex-1 bg-[var(--border)]" />
         </div>
         <form action={action} className="space-y-3">
+          <input type="hidden" name="next" value={next ?? ""} />
           <Input name="email" type="email" required placeholder="you@example.com" autoComplete="email" />
           <PasswordInput name="password" required placeholder="Password" autoComplete="current-password" />
           {state.error && <ErrorMessage error={state.error} />}
@@ -68,7 +71,7 @@ export function LoginForm() {
           </Button>
         </form>
         <div className="flex justify-between text-sm text-[var(--text-muted)]">
-          <Link href="/signup" className="hover:underline">
+          <Link href={signupHref} className="hover:underline">
             Create an account
           </Link>
           <Link href="/forgot-password" className="hover:underline">
