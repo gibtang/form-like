@@ -44,9 +44,22 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <p className="text-sm text-[var(--text-muted)]">
           Agents connect to <code className="rounded bg-[var(--surface)] px-1">/api/mcp</code> with{" "}
           <code className="rounded bg-[var(--surface)] px-1">Authorization: Bearer fl_live_…</code>. Tools:{" "}
+          <code className="rounded bg-[var(--surface)] px-1">create_form</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">update_draft</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">propose_form</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">propose_edit</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">publish_form</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">close_form</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">reopen_form</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">archive_form</code>,{" "}
+          <code className="rounded bg-[var(--surface)] px-1">unarchive_form</code>,{" "}
           <code className="rounded bg-[var(--surface)] px-1">list_forms</code>,{" "}
-          <code className="rounded bg-[var(--surface)] px-1">get_form_submissions</code>. Tokens are scoped to your
-          account only.
+          <code className="rounded bg-[var(--surface)] px-1">get_form_submissions</code>. AI proposals are unsaved —
+          persist them with <code className="rounded bg-[var(--surface)] px-1">create_form</code> /{" "}
+          <code className="rounded bg-[var(--surface)] px-1">update_draft</code> — and they consume your daily AI
+          operation quota. Form results include <code className="rounded bg-[var(--surface)] px-1">editorUrl</code> and{" "}
+          <code className="rounded bg-[var(--surface)] px-1">publicUrl</code> links. Tokens are scoped to your account
+          only.
         </p>
         {created && prefix && (
           <div data-testid="token-created" className="rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
