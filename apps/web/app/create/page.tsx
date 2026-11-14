@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { newId } from "@/lib/ids";
 import type { FormDefinition } from "@/lib/form-schema";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DraftEditor } from "../dashboard/forms/[formId]/editor";
 
 export const metadata = { title: "Create a form" };
@@ -30,5 +31,13 @@ const STARTER: FormDefinition = {
  */
 export default async function CreatePage() {
   const session = await auth();
-  return <DraftEditor mode="guest" authed={!!session?.user?.id} initialDefinition={STARTER} />;
+  return (
+    <div className="flex min-h-screen flex-col">
+      <SiteHeader />
+      <div className="flex-1">
+        <DraftEditor mode="guest" authed={!!session?.user?.id} initialDefinition={STARTER} />
+      </div>
+      <SiteFooter />
+    </div>
+  );
 }

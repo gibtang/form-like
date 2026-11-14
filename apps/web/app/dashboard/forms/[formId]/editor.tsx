@@ -250,7 +250,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
   const issuePaths = new Set((saveState?.issues ?? []).map((i) => i.path));
 
   return (
-    <main className="mx-auto grid min-h-screen max-w-6xl grid-cols-1 gap-8 p-6 lg:grid-cols-2">
+    <main className={cn("mx-auto grid max-w-6xl grid-cols-1 gap-8 p-6 lg:grid-cols-2", !isGuest && "min-h-screen")}>
       <section className="space-y-4">
         <div className="flex items-center justify-between">
           {isGuest ? (
@@ -264,7 +264,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
           )}
         </div>
         {isGuest ? (
-          <div className="rounded-lg border border-[var(--border)] bg-white px-4 py-3">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3">
             <p className="text-sm font-medium text-[var(--text)]">{def.title || "Untitled form"}</p>
             <p className="mt-0.5 text-xs text-[var(--text-muted)]">
               Draft — not saved yet. Saving keeps it in your account.
@@ -321,7 +321,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
           </div>
         )}
 
-        <div className="space-y-2 rounded-lg border border-[var(--border)] bg-white p-4">
+        <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
           <label htmlFor="ai-prompt" className="block text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
             Describe the form or change
           </label>
@@ -359,7 +359,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
 
         {!isGuest && <NotifySettings formId={formId} initialEmail={notifyEmail ?? null} />}
 
-        <div className="space-y-2 rounded-lg border border-[var(--border)] bg-white p-4">
+        <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
           <label className="block text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Title</label>
           <input
             className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm focus:border-[var(--accent)] focus:outline-none"
@@ -377,7 +377,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
         </div>
 
         {def.fields.map((field, index) => (
-          <div key={field.fieldId} data-testid={`field-card-${index}`} className="space-y-3 rounded-lg border border-[var(--border)] bg-white p-4">
+          <div key={field.fieldId} data-testid={`field-card-${index}`} className="space-y-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium text-[var(--text-muted)]">
                 Field {index + 1} · {TYPE_LABELS[field.type]}
@@ -496,7 +496,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
           </div>
         ))}
 
-        <div className="rounded-lg border border-[var(--border)] bg-white p-4">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Add field</p>
           <div className="flex flex-wrap gap-2">
             {FIELD_TYPES.map((t) => (
@@ -528,7 +528,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
           </div>
         )}
         {proposal?.supported && (
-          <div data-testid="proposal-panel" className="mb-4 space-y-3 rounded-lg border border-[var(--accent)] bg-white p-4">
+          <div data-testid="proposal-panel" className="mb-4 space-y-3 rounded-lg border border-[var(--accent)] bg-[var(--surface)] p-4">
             <p className="text-sm text-[var(--text)]">
               <span className="font-medium">Change summary:</span> {proposal.changeSummary}
             </p>
@@ -562,7 +562,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
             </p>
           </div>
         )}
-        <div className="rounded-lg border border-[var(--border)] bg-white p-6">
+        <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-6">
           <FormRenderer
             definition={def}
             answers={answers as never}
@@ -589,7 +589,7 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
             aria-modal="true"
             aria-labelledby="save-auth-title"
             data-testid="save-auth-prompt"
-            className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-white p-6 shadow-lg"
+            className="w-full max-w-sm rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 id="save-auth-title" className="text-lg font-semibold text-[var(--text)]">

@@ -1,209 +1,187 @@
-import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/button";
-import "./landing.css";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  ChevronRight,
+  Sparkles,
+} from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Form-like — build forms by describing them",
-  description:
-    "Describe a form in plain English, review the proposal, refine it, and publish a stable public link. Fixed versions, owner-only responses, open source.",
-};
-
-const FEATURES = [
+const steps = [
   {
-    title: "Prompt-built, human-reviewed",
-    body: "Every generation arrives as a rendered proposal with a change summary. Apply it, discard it, or undo — your draft only changes when you say so.",
+    number: "01",
+    title: "Say what you need",
+    description:
+      "Describe the people you’re asking and what you want to learn. Start with the idea, not a blank canvas.",
   },
   {
-    title: "Direct control when you want it",
-    body: "Fix wording by hand, toggle required fields, edit choice options, set rating scales, and wire conditional rules — no prompting needed.",
+    number: "02",
+    title: "Make it yours",
+    description:
+      "Review a working draft, then tweak a question yourself or ask for a change in plain language.",
   },
   {
-    title: "Stable public links",
-    body: "Publishing snapshots an immutable version at one URL. Later edits stay draft until you explicitly publish an update.",
-  },
-  {
-    title: "Answers keep their questions",
-    body: "Each response is stored against the exact version the respondent saw. Renaming a question never reinterprets old answers.",
-  },
-  {
-    title: "No respondent accounts",
-    body: "Share the link, collect answers. Public submission never calls an AI service, so your forms stay fast and your costs stay predictable.",
-  },
-  {
-    title: "Open source, self-hostable",
-    body: "Apache-2.0. Bring your own MongoDB and OpenRouter key; the bundled starter instructions are fully replaceable.",
+    number: "03",
+    title: "Share it anywhere",
+    description:
+      "Publish when it feels right and send one simple link. People can respond without an account.",
   },
 ];
 
-const STEPS = [
-  {
-    step: "1",
-    title: "Describe",
-    body: "Say what you need: “a customer feedback form about satisfaction, missing features, and permission to follow up.”",
-  },
-  {
-    step: "2",
-    title: "Review & refine",
-    body: "Check the rendered proposal, apply or discard it, then adjust anything directly — wording, options, required, branching.",
-  },
-  {
-    step: "3",
-    title: "Publish & collect",
-    body: "One click puts a fixed version at a permanent link. Watch responses arrive in your dashboard, export CSV any time.",
-  },
-];
+function Brand() {
+  return (
+    <Link href="/" className="brand" aria-label="Form-like home">
+      <span className="brand-mark" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </span>
+      <span>form-like</span>
+    </Link>
+  );
+}
+
+function HeroPreview() {
+  return (
+    <figure className="hero-art" aria-label="A preview of a prompt-built feedback form">
+      <Image
+        src="/images/form-like-hero.jpg"
+        alt=""
+        fill
+        priority
+        sizes="(max-width: 760px) 100vw, 55vw"
+        className="hero-art-image"
+      />
+      <div className="prompt-note">
+        <span className="prompt-note-icon"><Sparkles size={15} aria-hidden="true" /></span>
+        <span>
+          <span className="prompt-note-label">Your prompt</span>
+          <span className="prompt-note-text">A friendly customer feedback form</span>
+        </span>
+        <Check className="prompt-note-check" size={17} aria-hidden="true" />
+      </div>
+
+      <div className="form-preview">
+        <div className="preview-topbar">
+          <span className="preview-brand-mark" aria-hidden="true"><i /><i /><i /></span>
+          <span className="preview-form-name">Customer feedback</span>
+          <span className="preview-live"><span /> Draft</span>
+        </div>
+        <div className="preview-body">
+          <span className="preview-kicker"><Sparkles size={12} aria-hidden="true" /> FIRST DRAFT</span>
+          <h2>How are we doing?</h2>
+          <p className="preview-intro">A couple of quick questions to help us make things better.</p>
+
+          <div className="preview-question">
+            <span className="preview-question-title">How was your experience?</span>
+            <div className="rating-options" aria-label="Example rating choices">
+              {["Not great", "Okay", "Good", "Great", "Amazing"].map((label, index) => (
+                <span className="rating-option" key={label}>
+                  <span className={index === 3 ? "rating-dot selected" : "rating-dot"}>{index + 1}</span>
+                  <span>{label}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="preview-question">
+            <span className="preview-question-title">What could we improve?</span>
+            <span className="preview-textarea">Share anything that comes to mind…</span>
+          </div>
+          <div className="preview-submit">Send feedback <ArrowRight size={14} aria-hidden="true" /></div>
+        </div>
+      </div>
+
+      <div className="refine-note">
+        <span className="refine-sparkle"><Sparkles size={14} aria-hidden="true" /></span>
+        <span>“Add a question about what’s missing”</span>
+        <ArrowUpRight size={14} aria-hidden="true" />
+      </div>
+    </figure>
+  );
+}
 
 export default function HomePage() {
   return (
-    <div className="landing">
-      <header className="landing-header">
-        <Link href="/" className="landing-logo">
-          Form-like
-        </Link>
-        <nav className="landing-nav">
-          <Link href="/login">Sign in</Link>
-          <Link href="/create" className="landing-cta">
-            Get started
-          </Link>
-        </nav>
+    <main className="landing-page">
+      <header className="site-header">
+        <div className="header-inner">
+          <Brand />
+          <nav className="header-nav" aria-label="Main navigation">
+            <a href="#how-it-works">How it works</a>
+            <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">
+              Open source <ArrowUpRight size={13} aria-hidden="true" />
+            </a>
+          </nav>
+          <div className="header-actions">
+            <Link href="/login" className="sign-in-link">Sign in</Link>
+            <Link href="/create" className="header-cta">
+              Get started <ArrowRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
       </header>
 
-      <main>
-        {/* Hero */}
-        <section className="landing-hero">
-          <div className="landing-hero-copy">
-            <h1>
-              Build forms by <span className="landing-accent">describing them</span>.
-            </h1>
-            <p>
-              Say what you need in plain English. Form-like drafts the questions, shows you a real preview, and
-              publishes a stable link your respondents can always trust.
-            </p>
-            <div className="landing-hero-actions">
-              <Button asChild>
-                <Link href="/create">Create your first form</Link>
-              </Button>
-              <Button variant="secondary" asChild>
-                <Link href="/login">Sign in</Link>
-              </Button>
-            </div>
-            <p className="landing-hero-note">Free while in beta · No respondent accounts · Apache-2.0</p>
-          </div>
-          <div className="landing-hero-art">
-            {/* eslint-disable-next-line @next/next/no-img-element -- static SVG asset; the image optimizer rejects SVGs */}
-            <img
-              src="/hero-formlike.svg"
-              alt="A prompt becomes a reviewed form proposal, then a published public form"
-              width={1120}
-              height={640}
-              className="landing-hero-img"
-            />
-          </div>
-        </section>
-
-        {/* In-page product preview (styled mock of the editor) */}
-        <section className="landing-preview">
-          <h2>What you work in</h2>
-          <p className="landing-section-sub">
-            A real editor: prompts on the left, a live preview that answers exactly like your respondents will.
+      <section className="hero-section">
+        <div className="hero-copy">
+          <div className="eyebrow"><span className="eyebrow-dot" /> FORMS, MADE SIMPLE</div>
+          <h1>Good forms<br />start with <em>a prompt.</em></h1>
+          <p className="hero-description">
+            Tell Form-like what you want to ask. Get a thoughtful first draft, make it yours, and share it with one link.
           </p>
-          <div className="preview-shell" aria-hidden>
-            <div className="preview-toolbar">
-              <span className="preview-status">published</span>
-              <span className="preview-version">v3 live</span>
-              <span className="preview-link">form-like.com/f/…</span>
-              <span className="preview-spacer" />
-              <span className="preview-save">Save draft</span>
-            </div>
-            <div className="preview-columns">
-              <div className="preview-left">
-                <div className="preview-prompt">
-                  <span className="preview-label">Describe the form or change</span>
-                  <span className="preview-input">Ask about onboarding and add a follow-up for low scores</span>
-                  <span className="preview-generate">Generate proposal</span>
-                </div>
-                <div className="preview-field">
-                  <span className="preview-q">Overall satisfaction *</span>
-                  <div className="preview-rating">
-                    <span className="on">1</span>
-                    <span>2</span>
-                    <span>3</span>
-                    <span>4</span>
-                    <span>5</span>
-                  </div>
-                </div>
-                <div className="preview-field">
-                  <span className="preview-q">What should we improve?</span>
-                  <span className="preview-rule">show only when satisfaction &lt; 3</span>
-                </div>
-                <div className="preview-field">
-                  <span className="preview-q">Permission to follow up?</span>
-                  <span className="preview-option">● Yes&ensp;○ No</span>
-                </div>
-              </div>
-              <div className="preview-right">
-                <span className="preview-label">Proposed result — apply or discard</span>
-                <div className="preview-proposal">
-                  <p className="preview-summary">Edited your draft (kept 3 fields): satisfaction now 1–5, follow-up shown below a rating of 3.</p>
-                  <div className="preview-mini">
-                    <span className="preview-mini-q">Follow-up comment *</span>
-                    <span className="preview-mini-input" />
-                  </div>
-                  <div className="preview-actions">
-                    <span className="preview-apply">Apply</span>
-                    <span className="preview-discard">Discard</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="hero-actions">
+            <Link href="/create" className="primary-cta">
+              Create your first form <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+            <a href="#how-it-works" className="text-cta">See how it works <ChevronRight size={16} aria-hidden="true" /></a>
           </div>
-        </section>
-
-        {/* Features */}
-        <section className="landing-features">
-          <h2>Why small teams pick it</h2>
-          <div className="feature-grid">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="feature-card">
-                <h3>{f.title}</h3>
-                <p>{f.body}</p>
-              </div>
-            ))}
+          <div className="hero-footnote">
+            <span className="footnote-check"><Check size={12} aria-hidden="true" /></span>
+            Free to use <span className="footnote-separator">·</span> Open source <span className="footnote-separator">·</span> No design skills needed
           </div>
-        </section>
+        </div>
+        <HeroPreview />
+      </section>
 
-        {/* How it works */}
-        <section className="landing-steps">
-          <h2>From description to live link</h2>
-          <div className="step-row">
-            {STEPS.map((s) => (
-              <div key={s.step} className="step-card">
-                <span className="step-number">{s.step}</span>
-                <h3>{s.title}</h3>
-                <p>{s.body}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      <section className="workflow-section" id="how-it-works">
+        <div className="section-heading">
+          <div className="eyebrow"><span className="eyebrow-dot" /> FROM IDEA TO INBOX</div>
+          <h2>Less fiddling.<br /><em>Better questions.</em></h2>
+          <p>Skip the setup. Spend your time on what you actually want to learn.</p>
+        </div>
+        <div className="step-grid">
+          {steps.map((step) => (
+            <article className="step-card" key={step.number}>
+              <span className="step-number">{step.number}</span>
+              <h3>{step.title}</h3>
+              <p>{step.description}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
-        {/* CTA band */}
-        <section className="landing-cta-band">
-          <h2>Your next feedback form is one sentence away.</h2>
-          <Button asChild>
-            <Link href="/create">Get started free</Link>
-          </Button>
-        </section>
-      </main>
+      <section className="closing-section">
+        <div className="closing-sparkle"><Sparkles size={19} aria-hidden="true" /></div>
+        <div>
+          <p className="closing-kicker">A better place to begin</p>
+          <h2>Your next good question<br />is just a sentence away.</h2>
+        </div>
+        <Link href="/create" className="closing-cta">Make a form <ArrowRight size={16} aria-hidden="true" /></Link>
+        <div className="closing-shape closing-shape-one" aria-hidden="true" />
+        <div className="closing-shape closing-shape-two" aria-hidden="true" />
+      </section>
 
-      <footer className="landing-footer">
-        <span>© {new Date().getFullYear()} Form-like</span>
-        <Link href="/terms">Terms</Link>
-        <Link href="/privacy">Privacy</Link>
-        <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">
-          Source (Apache-2.0)
-        </a>
+      <footer className="site-footer">
+        <Brand />
+        <span className="footer-note">Thoughtful forms, without the busywork.</span>
+        <nav className="footer-links" aria-label="Footer navigation">
+          <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">Source <ArrowUpRight size={12} aria-hidden="true" /></a>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
+        </nav>
+        <span className="copyright">© {new Date().getFullYear()} Form-like</span>
       </footer>
-    </div>
+    </main>
   );
 }
