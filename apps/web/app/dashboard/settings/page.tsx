@@ -4,11 +4,12 @@ import { auth, signOut } from "@/auth";
 import { requireUser } from "@/lib/auth-user";
 import { connectDb } from "@/lib/db";
 import { listApiTokens, createApiToken, revokeApiToken } from "@/lib/api-token";
+import { CopyTokenButton } from "./copy-token-button";
 
 export const metadata = { title: "Settings" };
 
-export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ created?: string; prefix?: string }> }) {
-  const { created, prefix } = await searchParams;
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ created?: string; prefix?: string; error?: string }> }) {
+  const { created, prefix, error } = await searchParams;
   const session = await auth();
   const user = await requireUser();
   if (!user) redirect("/login");
@@ -52,12 +53,19 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             Token created (prefix <code>{prefix}…</code>). Copy it now — it is shown only once:
             <br />
             <code className="mt-1 block break-all rounded bg-white p-2">{created}</code>
+            <CopyTokenButton token={created} />
           </div>
+        )}
+        {error === "name_required" && (
+          <p data-testid="token-name-error" className="text-sm text-red-600">
+            Token name is required.
+          </p>
         )}
         <form
           action={async (formData: FormData) => {
             "use server";
-            const name = String(formData.get("name") ?? "").slice(0, 100) || "API token";
+            const name = String(formData.get("name") ?? "").trim().slice(0, 100);
+            if (!name) redirect("/dashboard/settings?error=name_required");
             const { token, keyPrefix } = await createApiToken(String(user._id), name);
             redirect(`/dashboard/settings?created=${encodeURIComponent(token)}&prefix=${encodeURIComponent(keyPrefix)}`);
           }}
@@ -65,6 +73,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         >
           <input
             name="name"
+            required
+            aria-label="Token name"
             placeholder="Token name (e.g. my agent)"
             maxLength={100}
             className="h-10 flex-1 rounded-lg border border-[var(--border)] px-3 text-sm focus:border-[var(--accent)] focus:outline-none"
