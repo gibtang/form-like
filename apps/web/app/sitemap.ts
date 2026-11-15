@@ -7,6 +7,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${base}/`, lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: `${base}/create`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: `${base}/pricing`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
+    { url: `${base}/html-form-to-email`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/form-backend-for-static-sites`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/web3forms-alternative`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${base}/formspree-alternative`, lastModified: now, changeFrequency: "monthly", priority: 0.7 },
     { url: `${base}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${base}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
   ];

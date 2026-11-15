@@ -14,6 +14,8 @@ export function GET(_req: NextRequest): Response {
 
 Production instance: ${base}
 
+Full agent-facing reference (endpoint details, error codes, MCP tools): ${base}/llms-full.txt
+
 ## Endpoint mode for static sites
 
 - Collect submissions from any static HTML form without a backend: point the form at ${base}/api/endpoint/<formId> with an access key. Enable it in the dashboard editor under "Endpoint mode"; the access key is shown once when generated.
@@ -30,6 +32,13 @@ Production instance: ${base}
 - Plain HTML posts redirect to a hosted result page. Submissions land in the same dashboard table, CSV export, and optional per-form email notification as published-form submissions.
 - Hidden honeypot field _formlike_hp must stay empty. Optional per-form origin whitelist restricts which sites may submit. Rate limit: 30 submissions/minute/form (429).
 - Free plan: 250 submissions/month per account across all forms (hard stop, resets monthly in UTC). Pro ($9.99/month): unlimited submissions and file uploads (multipart file fields store file name, size, and type).
+
+## Which integration to use
+
+- End user has form HTML already (or the agent is writing a static site): use Endpoint mode with the snippet above. No account needed by the agent; the site owner creates the form and supplies the form id + access key.
+- End user wants a hosted form page at a stable link: use the builder — guest drafts at /create, or MCP create_form/propose_form + publish_form with a Bearer token. Respondents answer at /f/<formId>.
+- Agents operating forms programmatically for an existing account (create drafts, AI proposals, publish lifecycle, read submissions): use the MCP server at /api/mcp.
+- Free plan: 250 submissions/month per account across all forms (hard stop, resets monthly UTC). Pro $9.99/month: unlimited submissions + file uploads. Pricing page: /pricing.
 
 ## Public pages
 
