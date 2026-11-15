@@ -11,6 +11,7 @@ import { createOwnedFormAction, proposeGuestAction } from "../../../create/actio
 import type { ProposalResult } from "@/lib/ai/generate";
 import { LifecycleBar } from "./lifecycle-bar";
 import { NotifySettings } from "./notify-settings";
+import { EndpointSettings } from "./endpoint-settings";
 import { cn } from "@/lib/cn";
 
 /** Browser-storage slot for an unsaved guest draft (cleared once persisted). */
@@ -65,6 +66,8 @@ interface DraftEditorProps {
   /** Owner mode only. */
   formId?: string;
   notifyEmail?: string | null;
+  endpoint?: { enabled: boolean; hasKey: boolean; whitelist: string[] };
+  origin?: string;
   lifecycle?: {
     status: string;
     latestVersionNumber: number | null;
@@ -75,7 +78,7 @@ interface DraftEditorProps {
   authed?: boolean;
 }
 
-export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail = null, lifecycle, authed = false }: DraftEditorProps) {
+export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail = null, endpoint, origin = "", lifecycle, authed = false }: DraftEditorProps) {
   const isGuest = mode === "guest";
   const router = useRouter();
   const [def, setDef] = useState<FormDefinition>(initialDefinition);
@@ -356,6 +359,10 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
             )}
           </div>
         </div>
+
+        {!isGuest && endpoint && origin && (
+          <EndpointSettings formId={formId} origin={origin} initial={endpoint} />
+        )}
 
         {!isGuest && <NotifySettings formId={formId} initialEmail={notifyEmail ?? null} />}
 

@@ -14,6 +14,23 @@ export function GET(_req: NextRequest): Response {
 
 Production instance: ${base}
 
+## Endpoint mode for static sites
+
+- Collect submissions from any static HTML form without a backend: point the form at ${base}/api/endpoint/<formId> with an access key. Enable it in the dashboard editor under "Endpoint mode"; the access key is shown once when generated.
+- Canonical snippet (replace <formId> and <accessKey>):
+
+<form action="${base}/api/endpoint/<formId>" method="POST">
+  <input type="hidden" name="formlike_key" value="<accessKey>">
+  <input type="text" name="name" required>
+  <input type="email" name="email" required>
+  <button type="submit">Send</button>
+</form>
+
+- Accepts application/x-www-form-urlencoded, multipart/form-data, and JSON POSTs. JSON responses: {"ok":true,"submissionId":"..."} on success; {"ok":false,"error":"..."} on failure (401 invalid_key, 402 quota_reached, 403 origin_not_allowed, 404 not_found, 409 closed, 422 upload_requires_pro, 429 rate_limited).
+- Plain HTML posts redirect to a hosted result page. Submissions land in the same dashboard table, CSV export, and optional per-form email notification as published-form submissions.
+- Hidden honeypot field _formlike_hp must stay empty. Optional per-form origin whitelist restricts which sites may submit. Rate limit: 30 submissions/minute/form (429).
+- Free plan: 250 submissions/month per account across all forms (hard stop, resets monthly in UTC). Pro ($9.99/month): unlimited submissions and file uploads (multipart file fields store file name, size, and type).
+
 ## Public pages
 
 - [Home](${base}/): product overview; start building at ${base}/create without an account.
