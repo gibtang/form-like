@@ -20,13 +20,13 @@ export default async function FormEditorPage({ params }: { params: Promise<{ for
   await connectDb();
 
   // Ownership first: another creator cannot open someone else's editor.
-  const form = await Form.findOne({ formId, ownerId: String(user._id) }).lean();
+  const form = await Form.findOne({ formId, ownerId: String(user._id) });
   if (!form) notFound();
 
   const parsed = formDefinitionSchema.safeParse(form.draft);
   const definition = parsed.success ? parsed.data : STARTER;
   const latest = form.latestVersionId
-    ? await FormVersion.findOne({ formId: form.formId, versionId: form.latestVersionId }).lean()
+    ? await FormVersion.findOne({ formId: form.formId, versionId: form.latestVersionId })
     : null;
   const publicUrl = form.latestVersionId ? `${process.env.BASE_URL ?? "http://localhost:3000"}/f/${form.formId}` : null;
 

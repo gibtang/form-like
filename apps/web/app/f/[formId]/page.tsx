@@ -14,7 +14,7 @@ interface PublicFormPageProps {
 export async function generateMetadata({ params }: PublicFormPageProps): Promise<Metadata> {
   const { formId } = await params;
   await connectDb();
-  const form = await Form.findOne({ formId, status: { $in: ["published", "closed"] } }).lean();
+  const form = await Form.findOne({ formId, status: { $in: ["published", "closed"] } });
   if (!form) return { title: "Form not found" };
   return {
     title: form.title,
@@ -28,7 +28,7 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
 
   // Draft and archived forms are not public; closed forms serve a clear
   // closed message across versions (BUILD-BRIEF publishing rules).
-  const form = await Form.findOne({ formId, status: { $in: ["published", "closed"] } }).lean();
+  const form = await Form.findOne({ formId, status: { $in: ["published", "closed"] } });
   if (!form) notFound();
 
   if (form.status === "closed") {
@@ -43,7 +43,7 @@ export default async function PublicFormPage({ params }: PublicFormPageProps) {
   }
 
   const version = form.latestVersionId
-    ? await FormVersion.findOne({ formId: form.formId, versionId: form.latestVersionId }).lean()
+    ? await FormVersion.findOne({ formId: form.formId, versionId: form.latestVersionId })
     : null;
   if (!version) notFound();
 

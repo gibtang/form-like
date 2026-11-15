@@ -1,7 +1,6 @@
 import "server-only";
 import { auth } from "@/auth";
-import type { UserDoc, VerificationTokenDoc } from "./models";
-import { User, VerificationToken } from "./models";
+import { toId, User, VerificationToken, type UserDoc, type VerificationTokenDoc } from "./models";
 import { connectDb } from "./db";
 import { hashPassword, randomToken, sha256Hex } from "./crypto";
 import { isEmailConfigured, sendPasswordResetEmail, sendVerificationEmail } from "./email";
@@ -89,7 +88,7 @@ export async function verifyEmail(raw: string): Promise<boolean> {
   const token = await consumeToken(raw, "verify");
   if (!token) return false;
   await User.updateOne(
-    { _id: token.userId, emailVerified: null },
+    { _id: toId(token.userId), emailVerified: null },
     { $set: { emailVerified: new Date() } },
   );
   return true;
@@ -120,7 +119,7 @@ export async function resetPassword(raw: string, password: string): Promise<bool
   const token = await consumeToken(raw, "reset");
   if (!token) return false;
   await User.updateOne(
-    { _id: token.userId },
+    { _id: toId(token.userId) },
     { $set: { passwordHash: await hashPassword(password) } },
   );
   return true;

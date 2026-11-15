@@ -129,7 +129,7 @@ function buildServer(userId: string): McpServer {
     { formId: z.string().min(1), prompt: z.string().trim().min(1) },
     async ({ formId, prompt }) => {
       await connectDb();
-      const form = await Form.findOne({ formId, ownerId: userId }).lean();
+      const form = await Form.findOne({ formId, ownerId: userId });
       if (!form) return errorResult(404, "Form not found");
       const parsed = formDefinitionSchema.safeParse(form.draft);
       return proposalResult(
@@ -163,7 +163,15 @@ function buildServer(userId: string): McpServer {
       form.latestVersionId = version.versionId;
       if (form.status !== "closed") form.status = "published";
       form.updatedAt = new Date();
-      await form.save();
+      await Form.updateOne(
+        { formId: form.formId },
+        {
+          versionCounter: form.versionCounter,
+          latestVersionId: form.latestVersionId,
+          status: form.status,
+          updatedAt: form.updatedAt,
+        },
+      );
 
       return jsonResult({
         formId: form.formId,
@@ -184,10 +192,13 @@ function buildServer(userId: string): McpServer {
       if (!form) return errorResult(404, "Form not found");
       if (form.status !== "published") return errorResult(409, "Only a published form can be closed.");
 
-      form.status = "closed";
-      form.closedAt = new Date();
-      form.updatedAt = new Date();
-      await form.save();
+      const status = "closed";
+      const closedAt = new Date();
+      const updatedAt = new Date();
+      await Form.updateOne({ formId: form.formId }, { status, closedAt, updatedAt });
+      form.status = status;
+      form.closedAt = closedAt;
+      form.updatedAt = updatedAt;
       return jsonResult({ formId: form.formId, status: form.status, ...formLinks(form) });
     },
   );
@@ -202,10 +213,13 @@ function buildServer(userId: string): McpServer {
       if (!form) return errorResult(404, "Form not found");
       if (form.status !== "closed") return errorResult(409, "Only a closed form can be reopened.");
 
-      form.status = "published";
-      form.closedAt = null;
-      form.updatedAt = new Date();
-      await form.save();
+      const status = "published";
+      const closedAt = null;
+      const updatedAt = new Date();
+      await Form.updateOne({ formId: form.formId }, { status, closedAt, updatedAt });
+      form.status = status;
+      form.closedAt = closedAt;
+      form.updatedAt = updatedAt;
       return jsonResult({ formId: form.formId, status: form.status, ...formLinks(form) });
     },
   );
@@ -219,10 +233,13 @@ function buildServer(userId: string): McpServer {
       const form = await Form.findOne({ formId, ownerId: userId });
       if (!form) return errorResult(404, "Form not found");
 
-      form.status = "archived";
-      form.archivedAt = new Date();
-      form.updatedAt = new Date();
-      await form.save();
+      const status = "archived";
+      const archivedAt = new Date();
+      const updatedAt = new Date();
+      await Form.updateOne({ formId: form.formId }, { status, archivedAt, updatedAt });
+      form.status = status;
+      form.archivedAt = archivedAt;
+      form.updatedAt = updatedAt;
       return jsonResult({ formId: form.formId, status: form.status, ...formLinks(form) });
     },
   );
@@ -237,10 +254,13 @@ function buildServer(userId: string): McpServer {
       if (!form) return errorResult(404, "Form not found");
       if (form.status !== "archived") return errorResult(409, "Form is not archived.");
 
-      form.status = form.latestVersionId ? "published" : "draft";
-      form.archivedAt = null;
-      form.updatedAt = new Date();
-      await form.save();
+      const status = form.latestVersionId ? "published" : "draft";
+      const archivedAt = null;
+      const updatedAt = new Date();
+      await Form.updateOne({ formId: form.formId }, { status, archivedAt, updatedAt });
+      form.status = status;
+      form.archivedAt = archivedAt;
+      form.updatedAt = updatedAt;
       return jsonResult({ formId: form.formId, status: form.status, ...formLinks(form) });
     },
   );
@@ -270,7 +290,7 @@ function buildServer(userId: string): McpServer {
     },
     async ({ formId, limit }) => {
       await connectDb();
-      const form = await Form.findOne({ formId, ownerId: userId }).lean();
+      const form = await Form.findOne({ formId, ownerId: userId });
       if (!form) return errorResult(404, "Form not found");
       const submissions = await Submission.find({ formId: form.formId }).sort({ submittedAt: -1 }).limit(limit).lean();
       const versions = await FormVersion.find({ formId: form.formId }).lean();

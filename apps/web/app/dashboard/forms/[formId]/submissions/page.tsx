@@ -37,7 +37,7 @@ export default async function SubmissionsPage({ params }: { params: Promise<{ fo
   if (!user) redirect("/login");
   await connectDb();
 
-  const form = await Form.findOne({ formId, ownerId: String(user._id) }).lean();
+  const form = await Form.findOne({ formId, ownerId: String(user._id) });
   if (!form) notFound();
 
   const submissions = await Submission.find({ formId: form.formId }).sort({ submittedAt: -1 }).limit(500).lean();

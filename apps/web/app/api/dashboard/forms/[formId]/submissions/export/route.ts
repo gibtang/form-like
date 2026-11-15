@@ -24,7 +24,7 @@ export const GET = withApiErrors("api/submissions/export", async function GET(re
     return NextResponse.json({ error: "Not signed in" }, { status: 401 });
   }
   await connectDb();
-  const form = await Form.findOne({ formId, ownerId: String(session.user.id) }).lean();
+  const form = await Form.findOne({ formId, ownerId: String(session.user.id) });
   if (!form) {
     return NextResponse.json({ error: "Form not found" }, { status: 404 });
   }
