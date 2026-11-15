@@ -49,6 +49,10 @@ export function SiteFooter() {
       <nav className="footer-links" aria-label="Footer navigation">
         <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">Source <ArrowUpRight size={12} aria-hidden="true" /></a>
         <Link href="/pricing">Pricing</Link>
+        <Link href="/html-form-to-email">HTML form to email</Link>
+        <Link href="/form-backend-for-static-sites">Static-site form backend</Link>
+        <Link href="/web3forms-alternative">Web3Forms alternative</Link>
+        <Link href="/formspree-alternative">Formspree alternative</Link>
         <Link href="/terms">Terms</Link>
         <Link href="/privacy">Privacy</Link>
       </nav>
