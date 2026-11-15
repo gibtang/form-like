@@ -30,6 +30,31 @@ answer a fixed published version — no account, no AI calls on the public path.
    the respondent saw, CSV export, optional email notification per form.
    Close a form to stop submissions across versions; archive to set it aside.
 
+## Endpoint mode for static sites
+
+Collect submissions from any static HTML form without a backend. In the
+dashboard editor, enable **Endpoint mode** — you get an action URL and an
+access key (shown once). Paste this snippet:
+
+```html
+<form action="https://form-like.com/api/endpoint/YOUR_FORM_ID" method="POST">
+  <input type="hidden" name="formlike_key" value="YOUR_ACCESS_KEY">
+  <input type="text" name="name" required>
+  <input type="email" name="email" required>
+  <button type="submit">Send</button>
+</form>
+```
+
+- Works with plain HTML posts (hosted result page) and fetch/JSON POSTs.
+- Submissions land in the same dashboard table, CSV export, and optional
+  per-form email notification as published-form submissions.
+- Optional per-form origin whitelist; rate limit 30/minute/form; honeypot
+  field `_formlike_hp` must stay empty.
+- Free plan: 250 submissions/month per account. Pro ($9.99/month): unlimited
+  submissions + file uploads.
+
+Full endpoint reference in [`llms.txt`](https://form-like.com/llms.txt).
+
 ## Hosted plans (form-like.com)
 
 - **Free — $0/month:** unlimited forms, **250 submissions/month per account**
