@@ -1,3 +1,4 @@
+import { createReporter } from "@simple-alerts/nextjs";
 import * as Sentry from "@sentry/nextjs";
 
 // Server + edge initialization (Next 15 instrumentation convention).
@@ -13,4 +14,19 @@ export async function register(): Promise<void> {
   }
 }
 
-export const onRequestError = Sentry.captureRequestError;
+// Combined server-error reporting: existing Sentry handler plus self-hosted
+// Simple Alerts. Both run independently; neither failure affects the other.
+// Simple Alerts is a no-op until ALERTS_ENDPOINT and ALERTS_PROJECT_KEY exist.
+const alertsEnabled = Boolean(process.env.ALERTS_ENDPOINT && process.env.ALERTS_PROJECT_KEY);
+
+export const onRequestError = alertsEnabled
+  ? async (...args: Parameters<typeof Sentry.captureRequestError>) => {
+      await Promise.allSettled([
+        Sentry.captureRequestError(...args),
+        createReporter({
+          endpoint: process.env.ALERTS_ENDPOINT!,
+          projectKey: process.env.ALERTS_PROJECT_KEY!,
+        }).onRequestError(...args),
+      ]);
+    }
+  : Sentry.captureRequestError;

@@ -15,6 +15,7 @@
     "@openrouter/ai-sdk-provider": "^2.10.0",
     "@radix-ui/react-slot": "^1.1.0",
     "@sentry/nextjs": "^11.11.0",
+    "@simple-alerts/nextjs": "https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz",
     "ai": "^6.0.323",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
