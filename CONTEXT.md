@@ -43,6 +43,14 @@ A fixed snapshot of a form's questions, answer options, and presentation at publ
 A respondent's submitted set of answers, associated with the form version they answered.
 _Avoid_: Response, when referring to the complete submission rather than an individual answer.
 
+**Submission notification**:
+An email sent to the creator when a new submission arrives on their form. Auto-sent by default on forms created after the feature shipped.
+_Avoid_: Email alert, response notification.
+
+**Notification address**:
+The address receiving submission notifications — a per-form override the creator sets, or by default their verified account email.
+_Avoid_: Notify email.
+
 **Answer**:
 A value supplied for a particular field within a submission.
 
