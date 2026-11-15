@@ -7,6 +7,7 @@ import { validationIssues, type AnswerMap } from "@/lib/form-eval";
 import { sendSubmissionNotification } from "@/lib/email";
 import { withApiErrors } from "@/lib/api-wrap";
 import { checkSubmissionAllowance, recordQuotaRejection } from "@/lib/billing";
+import { gaEventForUser } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,6 +79,7 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
   }
 
   const created = await Submission.create({ formId, versionId: version.versionId, answers });
+  await gaEventForUser(form.ownerId, "submission_received", { form_id: formId });
 
   // Optional creator notification — a mail failure must never fail a
   // recorded submission (fire, log, move on).

@@ -3,6 +3,7 @@ import { newId } from "@/lib/ids";
 import type { FormDefinition } from "@/lib/form-schema";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { DraftEditor } from "../dashboard/forms/[formId]/editor";
+import { CreateStartPing } from "./create-start-ping";
 
 export const metadata = { title: "Create a form" };
 
@@ -36,6 +37,7 @@ export default async function CreatePage() {
       <SiteHeader />
       <div className="flex-1">
         <DraftEditor mode="guest" authed={!!session?.user?.id} initialDefinition={STARTER} />
+        <CreateStartPing />
       </div>
       <SiteFooter />
     </div>
