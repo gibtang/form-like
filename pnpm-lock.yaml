@@ -28,6 +28,9 @@ importers:
       '@sentry/nextjs':
         specifier: ^11.11.0
         version: 11.11.0(next@15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
+      '@simple-alerts/nextjs':
+        specifier: https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz
+        version: https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz(next@15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
       ai:
         specifier: ^6.0.323
         version: 6.0.323(zod@4.6.7)
@@ -996,6 +999,19 @@ packages:
   '@sentry/vercel-edge@11.11.0':
     resolution: {integrity: sha512-/EA3ilVCh7bPes6a2Qbs/M6C17kBQAeQy0yL10W/26hDKapAuO5PnjimbwslEpgxDyZFZUzGBQByp0StyDlVFQ==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
+
+  '@simple-alerts/nextjs@https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz':
+    resolution: {tarball: https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz}
+    version: 0.1.0
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      next: '>=15.0.0 <17.0.0'
+      react: '>=19.0.0'
+    peerDependenciesMeta:
+      next:
+        optional: true
+      react:
+        optional: true
 
   '@smithy/core@3.39.0':
     resolution: {integrity: sha512-JJ/46AWQ4ipS1N2eZmUj7yzIhH8NhQIfAE+dce7NSB6dmFh+7hvD4pbofcoT4I0Xzfy/LNhZx3V2QhwYyAiqdg==}
@@ -2722,6 +2738,11 @@ snapshots:
       '@opentelemetry/api': 1.10.0
       '@sentry/core': 11.11.0
       '@sentry/server-utils': 11.11.0
+
+  '@simple-alerts/nextjs@https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz(next@15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)':
+    optionalDependencies:
+      next: 15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react: 19.3.1
 
   '@smithy/core@3.39.0':
     dependencies:
