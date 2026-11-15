@@ -3,6 +3,7 @@ import { connectDb } from "@/lib/db";
 import { Form, Submission, User } from "@/lib/models";
 import { sendSubmissionNotification } from "@/lib/email";
 import { checkSubmissionAllowance, recordQuotaRejection } from "@/lib/billing";
+import { gaEventForUser } from "@/lib/analytics";
 import {
   HONEYPOT_FIELD,
   RESERVED_FIELDS,
@@ -114,6 +115,7 @@ export const POST = withApiErrors("api/endpoint", async function POST(req: NextR
   }
 
   const created = await Submission.create({ formId, versionId: null, answers });
+  await gaEventForUser(form.ownerId, "submission_received", { form_id: formId });
 
   // Optional creator notification — a mail failure must never fail the submission.
   if (form.notifyEmail) {
