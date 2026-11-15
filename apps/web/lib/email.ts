@@ -111,20 +111,34 @@ export async function sendPasswordResetEmail(user: UserLike, url: string): Promi
   });
 }
 
+export interface SubmissionSummaryItem {
+  label: string;
+  value: string;
+}
+
 export async function sendSubmissionNotification(input: {
   to: string;
   formTitle: string;
   submittedAt: Date;
-  summaryHtml: string;
+  /** Field/value pairs exactly as the respondent submitted them. */
+  items: SubmissionSummaryItem[];
   detailUrl: string;
 }): Promise<boolean> {
   const subject = `New submission — ${input.formTitle}`;
   const bodyHtml = `<p style="margin:0 0 16px;font-size:14px">A new submission arrived at ${escapeHtml(
     input.submittedAt.toLocaleString(),
   )}.</p>
-${input.summaryHtml}
+${input.items.length > 0 ? `<p style="margin:0 0 8px;font-size:14px"><strong>Submission details:</strong></p>${input.items.map((item) => `<p style="margin:0 0 6px;font-size:14px"><strong>${escapeHtml(item.label)}:</strong> ${escapeHtml(item.value)}</p>`).join("")}` : `<p style="margin:0 0 8px;font-size:14px;color:#8a8aa3">(No fields were submitted.)</p>`}
 <p style="margin:16px 0 0;font-size:14px">Open your dashboard to review all submissions.</p>`;
-  const text = `A new submission arrived at ${input.submittedAt.toLocaleString()} for "${input.formTitle}".\n${input.detailUrl}`;
+  const textSummary = input.items.length
+    ? input.items.map((item) => `${item.label}: ${item.value}`).join("\n")
+    : "(No fields were submitted.)";
+  const text = `A new submission arrived at ${input.submittedAt.toLocaleString()} for "${input.formTitle}".
+
+Submission details:
+${textSummary}
+
+Review all submissions: ${input.detailUrl}`;
   return sendEmail({
     to: input.to,
     subject,
