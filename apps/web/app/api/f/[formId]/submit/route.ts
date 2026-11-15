@@ -94,7 +94,7 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
       if (recipient && (await consumeNotificationSlot(formId))) {
         const origin = req.nextUrl.origin;
         const def = parsed.data;
-        const summary = def.fields
+        const items = def.fields
           .map((f) => {
             const a = body.data.answers[f.fieldId];
             if (a === undefined || a === null || a === "" || (Array.isArray(a) && a.length === 0)) return null;
@@ -103,15 +103,14 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
               : f.type === "rating"
                 ? `${a}/${f.ratingMax ?? 5}`
                 : String(a);
-            return `<p style="margin:0 0 6px;font-size:14px"><strong>${f.label}:</strong> ${shown}</p>`;
+            return { label: f.label, value: shown };
           })
-          .filter(Boolean)
-          .join("");
+          .filter((item): item is { label: string; value: string } => item !== null);
         const sent = await sendSubmissionNotification({
           to: recipient,
           formTitle: def.title,
           submittedAt: new Date(created.submittedAt as unknown as string),
-          summaryHtml: summary,
+          items,
           detailUrl: `${origin}/dashboard/forms/${formId}/submissions/${created.submissionId}`,
         });
         if (sent) {
