@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/auth-user";
 import { connectDb } from "@/lib/db";
 import { User } from "@/lib/models";
 import { isStripeConfigured, stripe } from "@/lib/stripe";
+import { gaEvent } from "@/lib/analytics";
 
 /**
  * Subscription lifecycle, all synchronous Stripe calls (no webhooks):
@@ -36,6 +37,7 @@ export async function startCheckoutAction(): Promise<void> {
     success_url: `${base}/dashboard/settings?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${base}/dashboard/settings?checkout=cancelled`,
   });
+  await gaEvent("upgrade_started", user.email);
   if (!session.url) redirect("/dashboard/settings?checkout=unavailable");
   redirect(session.url);
 }
@@ -68,6 +70,7 @@ export async function completeCheckoutAction(sessionId: string): Promise<{ ok: b
           : null,
       },
     );
+    await gaEvent("upgrade_completed", user.email);
     revalidatePath("/dashboard/settings");
     return { ok: true };
   } catch (err) {

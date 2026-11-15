@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { signIn } from "@/auth";
+import { gaEvent } from "@/lib/analytics";
 import {
   createUserWithPassword,
   requestPasswordReset,
@@ -111,6 +112,7 @@ export async function signupAction(_prev: FormState, formData: FormData): Promis
     throw err;
   }
   revalidatePath("/login");
+  await gaEvent("signup_completed", parsed.data.email);
   // No auto-verify fallback: a failed verification email still creates the
   // account, which stays unverified; login offers a resend path.
   const next = safeNext(formData);
