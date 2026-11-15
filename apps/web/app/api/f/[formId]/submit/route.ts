@@ -6,6 +6,7 @@ import { formDefinitionSchema } from "@/lib/form-schema";
 import { validationIssues, type AnswerMap } from "@/lib/form-eval";
 import { sendSubmissionNotification } from "@/lib/email";
 import { withApiErrors } from "@/lib/api-wrap";
+import { checkSubmissionAllowance, recordQuotaRejection } from "@/lib/billing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -64,6 +65,18 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
     }
     return { fieldId, value: Array.isArray(value) ? null : value, optionIds: [] };
   });
+  // Free-plan hard cap (issue #28): enforced server-side per account, across
+  // all of that account's forms, monthly UTC. Over-cap submissions are
+  // rejected and never stored.
+  const allowance = await checkSubmissionAllowance(form.ownerId);
+  if (!allowance.allowed) {
+    await recordQuotaRejection(form.ownerId);
+    return NextResponse.json(
+      { ok: false, error: "quota_reached", message: "This form has reached its free plan submission limit." },
+      { status: 402 },
+    );
+  }
+
   const created = await Submission.create({ formId, versionId: version.versionId, answers });
 
   // Optional creator notification — a mail failure must never fail a
