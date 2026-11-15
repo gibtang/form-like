@@ -25,6 +25,7 @@ export function SiteHeader() {
       <div className="header-inner">
         <Brand />
         <nav className="header-nav" aria-label="Main navigation">
+          <Link href="/pricing">Pricing</Link>
           <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">
             Open source <ArrowUpRight size={13} aria-hidden="true" />
           </a>
@@ -47,6 +48,7 @@ export function SiteFooter() {
       <span className="footer-note">Thoughtful forms, without the busywork.</span>
       <nav className="footer-links" aria-label="Footer navigation">
         <a href="https://github.com/gibtang/form-like" target="_blank" rel="noreferrer">Source <ArrowUpRight size={12} aria-hidden="true" /></a>
+        <Link href="/pricing">Pricing</Link>
         <Link href="/terms">Terms</Link>
         <Link href="/privacy">Privacy</Link>
       </nav>

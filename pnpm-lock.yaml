@@ -28,6 +28,9 @@ importers:
       '@sentry/nextjs':
         specifier: ^11.11.0
         version: 11.11.0(next@15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)(wrangler@4.162.0(@types/node@22.20.5))
+      '@simple-alerts/nextjs':
+        specifier: https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz
+        version: https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz(next@15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)
       ai:
         specifier: ^6.0.323
         version: 6.0.323(zod@4.6.7)
@@ -58,6 +61,9 @@ importers:
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
+      stripe:
+        specifier: ^22.3.0
+        version: 22.3.0(@types/node@22.20.5)
       tailwind-merge:
         specifier: ^2.6.0
         version: 2.6.1
@@ -1315,6 +1321,19 @@ packages:
   '@sentry/vercel-edge@11.11.0':
     resolution: {integrity: sha512-/EA3ilVCh7bPes6a2Qbs/M6C17kBQAeQy0yL10W/26hDKapAuO5PnjimbwslEpgxDyZFZUzGBQByp0StyDlVFQ==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
+
+  '@simple-alerts/nextjs@https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz':
+    resolution: {tarball: https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz}
+    version: 0.1.0
+    engines: {node: '>=22.0.0'}
+    peerDependencies:
+      next: '>=15.0.0 <17.0.0'
+      react: '>=19.0.0'
+    peerDependenciesMeta:
+      next:
+        optional: true
+      react:
+        optional: true
 
   '@sindresorhus/is@7.2.0':
     resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
@@ -2579,6 +2598,15 @@ packages:
   strip-ansi@7.2.0:
     resolution: {integrity: sha512-yDPMNjp4WyfYBkHnjIRLfca1i6KMyGCtsVgoKe/z1+6vukgaENdgGBZt+ZmKPc4gavvEZ5OgHfHdrazhgNyG7w==}
     engines: {node: '>=12'}
+
+  stripe@22.3.0:
+    resolution: {integrity: sha512-ypO6xjVrMWs9SmIMeHr8naCx3dAQ0clxMdUTxn7Ejd7hmY9meBGfE+N4pVHkf9sUNebAHp6uJo6mV3GxDIc2cA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
 
   styled-jsx@5.1.6:
     resolution: {integrity: sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA==}
@@ -4159,6 +4187,11 @@ snapshots:
       '@sentry/core': 11.11.0
       '@sentry/server-utils': 11.11.0
 
+  '@simple-alerts/nextjs@https://github.com/gibtang/simple-alerts/releases/download/sdk-v0.1.0/simple-alerts-nextjs-0.1.0.tgz(next@15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(react@19.3.1)':
+    optionalDependencies:
+      next: 15.5.29(@opentelemetry/api@1.10.0)(@types/node@22.20.5)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      react: 19.3.1
+
   '@sindresorhus/is@7.2.0': {}
 
   '@smithy/config-resolver@4.7.2':
@@ -5441,6 +5474,10 @@ snapshots:
   strip-ansi@7.2.0:
     dependencies:
       ansi-regex: 6.6.0
+
+  stripe@22.3.0(@types/node@22.20.5):
+    optionalDependencies:
+      '@types/node': 22.20.5
 
   styled-jsx@5.1.6(react@19.3.1):
     dependencies:

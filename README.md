@@ -30,6 +30,16 @@ answer a fixed published version — no account, no AI calls on the public path.
    the respondent saw, CSV export, optional email notification per form.
    Close a form to stop submissions across versions; archive to set it aside.
 
+## Hosted plans (form-like.com)
+
+- **Free — $0/month:** unlimited forms, **250 submissions/month per account**
+  (hard stop when reached, resets monthly in UTC), AI generation at 20
+  ops/day, email notifications, CSV export.
+- **Pro — $9.99/month:** unlimited submissions, custom domain, file uploads.
+  Cancel anytime; Pro stays active until the end of the paid period.
+
+Full details at [form-like.com/pricing](https://form-like.com/pricing).
+
 ## Self-hosting
 
 Requirements: Node.js 22+, a MongoDB instance (Atlas or self-hosted), and an

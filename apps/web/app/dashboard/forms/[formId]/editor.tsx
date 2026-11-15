@@ -65,6 +65,8 @@ interface DraftEditorProps {
   /** Owner mode only. */
   formId?: string;
   notifyEmail?: string | null;
+  notifyEnabled?: boolean;
+  notifyDisabledReason?: string | null;
   lifecycle?: {
     status: string;
     latestVersionNumber: number | null;
@@ -75,7 +77,7 @@ interface DraftEditorProps {
   authed?: boolean;
 }
 
-export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail = null, lifecycle, authed = false }: DraftEditorProps) {
+export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail = null, notifyEnabled = false, notifyDisabledReason = null, lifecycle, authed = false }: DraftEditorProps) {
   const isGuest = mode === "guest";
   const router = useRouter();
   const [def, setDef] = useState<FormDefinition>(initialDefinition);
@@ -357,7 +359,14 @@ export function DraftEditor({ mode, formId = "", initialDefinition, notifyEmail 
           </div>
         </div>
 
-        {!isGuest && <NotifySettings formId={formId} initialEmail={notifyEmail ?? null} />}
+        {!isGuest && (
+          <NotifySettings
+            formId={formId}
+            initialEmail={notifyEmail ?? null}
+            initialEnabled={notifyEnabled}
+            disabledReason={notifyDisabledReason}
+          />
+        )}
 
         <div className="space-y-2 rounded-lg border border-[var(--border)] bg-[var(--surface)] p-4">
           <label className="block text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">Title</label>

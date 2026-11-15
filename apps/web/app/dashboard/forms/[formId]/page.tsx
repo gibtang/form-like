@@ -36,6 +36,8 @@ export default async function FormEditorPage({ params }: { params: Promise<{ for
       formId={formId}
       initialDefinition={definition}
       notifyEmail={form.notifyEmail ?? null}
+      notifyEnabled={form.emailNotifications === true}
+      notifyDisabledReason={form.notificationsDisabledReason ?? null}
       lifecycle={{
         status: form.status,
         latestVersionNumber: latest?.versionNumber ?? null,
