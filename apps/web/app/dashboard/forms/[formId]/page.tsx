@@ -36,6 +36,12 @@ export default async function FormEditorPage({ params }: { params: Promise<{ for
       formId={formId}
       initialDefinition={definition}
       notifyEmail={form.notifyEmail ?? null}
+      endpoint={{
+        enabled: form.endpointEnabled === true,
+        hasKey: Boolean(form.endpointKeyHash),
+        whitelist: form.endpointWhitelist ?? [],
+      }}
+      origin={process.env.BASE_URL ?? "http://localhost:3000"}
       lifecycle={{
         status: form.status,
         latestVersionNumber: latest?.versionNumber ?? null,

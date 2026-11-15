@@ -118,6 +118,13 @@ const formSchema = new Schema(
     latestVersionId: { type: String, default: null },
     /** Optional creator notification address for new submissions. */
     notifyEmail: { type: String, default: null },
+    /**
+     * Endpoint-only mode (issue #26): a static-site POST target with its own
+     * access key. Key stored hashed; whitelist null = any origin allowed.
+     */
+    endpointEnabled: { type: Boolean, default: false },
+    endpointKeyHash: { type: String, default: null },
+    endpointWhitelist: { type: [String], default: null },
     closedAt: { type: Date, default: null },
     archivedAt: { type: Date, default: null },
     createdAt: { type: Date, required: true, default: () => new Date() },
@@ -155,7 +162,8 @@ const submissionSchema = new Schema(
   {
     submissionId: { type: String, required: true, default: () => newId("sub_"), unique: true },
     formId: { type: String, required: true },
-    versionId: { type: String, required: true },
+    /** null for endpoint-mode submissions (issue #26) — no published version. */
+    versionId: { type: String, default: null },
     answers: [
       new Schema(
         {
