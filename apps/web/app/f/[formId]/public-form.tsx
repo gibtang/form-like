@@ -12,7 +12,7 @@ interface PublicFormProps {
   definition: FormDefinition;
 }
 
-type SubmitState = "idle" | "submitting" | "success" | "closed" | "error";
+type SubmitState = "idle" | "submitting" | "success" | "closed" | "quota" | "error";
 
 export function PublicForm({ formId, versionId, definition }: PublicFormProps) {
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
@@ -36,6 +36,10 @@ export function PublicForm({ formId, versionId, definition }: PublicFormProps) {
       }
       if (body.error === "closed") {
         setState("closed");
+        return;
+      }
+      if (body.error === "quota_reached") {
+        setState("quota");
         return;
       }
       if (res.status === 400) {
@@ -67,6 +71,18 @@ export function PublicForm({ formId, versionId, definition }: PublicFormProps) {
       <div data-testid="submit-closed" className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
         <h2 className="text-lg font-semibold text-amber-800">{definition.title} is closed</h2>
         <p className="mt-1 text-sm text-amber-700">This form stopped accepting submissions while you were answering. Your response was not recorded.</p>
+      </div>
+    );
+  }
+
+  if (state === "quota") {
+    return (
+      <div data-testid="submit-quota" className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-center">
+        <h2 className="text-lg font-semibold text-amber-800">Not accepting responses right now</h2>
+        <p className="mt-1 text-sm text-amber-700">
+          The owner of this form has reached their plan limit, so this response was not recorded. They can raise the
+          limit from their Form-like dashboard.
+        </p>
       </div>
     );
   }

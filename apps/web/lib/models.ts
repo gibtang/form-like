@@ -12,6 +12,16 @@ const userSchema = new Schema(
     name: { type: String, default: null },
     image: { type: String, default: null },
     passwordHash: { type: String, default: null },
+    /** Stripe billing snapshot; subscriptionStatus is the last-seen Stripe status. */
+    stripeCustomerId: { type: String, default: null },
+    stripeSubscriptionId: { type: String, default: null },
+    subscriptionStatus: { type: String, default: null },
+    proSince: { type: Date, default: null },
+    proUntil: { type: Date, default: null },
+    proCancelAtPeriodEnd: { type: Boolean, default: false },
+    /** Submissions rejected this month because the free cap was reached. */
+    quotaRejectedMonth: { type: String, default: null },
+    quotaRejectedCount: { type: Number, default: 0 },
     createdAt: { type: Date, required: true, default: () => new Date() },
   },
   { collection: "users" },

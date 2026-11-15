@@ -14,8 +14,8 @@ export default function TermsPage() {
         <h2 className="font-semibold">The service</h2>
         <p>
           Form-like lets you build forms by describing them, refine them through prompts or direct edits, and publish
-          them at stable public links. The hosted service at form-like.com is provided as-is, free of charge, while in
-          beta.
+          them at stable public links. The hosted service at form-like.com has a free plan (250 submissions per
+          account per month) and a paid Pro plan ($9.99/month) — see the pricing page for current terms.
         </p>
         <h2 className="font-semibold">Your forms and your respondents</h2>
         <p>
