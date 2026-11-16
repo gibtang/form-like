@@ -1,5 +1,6 @@
 import "server-only";
-import mongoose from "mongoose";
+import type { ObjectId } from "mongodb";
+import { Model, toId } from "./models";
 import { connectDb } from "./db";
 
 /**
@@ -50,67 +51,35 @@ function utcDay(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-interface UsageDoc extends mongoose.Document {
+interface UsageDoc {
+  _id: ObjectId;
   accountId: string;
   day: string;
   count: number;
 }
 
-interface LockDoc extends mongoose.Document {
+interface LockDoc {
+  _id: ObjectId;
   accountId: string;
   lockedAt: Date;
   releasedAt: Date | null;
 }
 
-interface SpendDoc extends mongoose.Document {
+interface SpendDoc {
+  _id: ObjectId;
   day: string;
   inputTokens: number;
   outputTokens: number;
   usd: number;
 }
 
-const UsageModel =
-  (mongoose.models.AiUsage as mongoose.Model<UsageDoc>) ??
-  mongoose.model<UsageDoc>(
-    "AiUsage",
-    new mongoose.Schema(
-      {
-        accountId: { type: String, required: true },
-        day: { type: String, required: true },
-        count: { type: Number, required: true, default: 0 },
-      },
-      { collection: "ai_usage", timestamps: false },
-    ).index({ accountId: 1, day: 1 }, { unique: true }),
-  );
+const UsageModel = new Model<UsageDoc>("ai_usage", () => ({ count: 0 }));
 
-const LockModel =
-  (mongoose.models.AiLock as mongoose.Model<LockDoc>) ??
-  mongoose.model<LockDoc>(
-    "AiLock",
-    new mongoose.Schema(
-      {
-        accountId: { type: String, required: true, unique: true },
-        lockedAt: { type: Date, required: true },
-        releasedAt: { type: Date, default: null },
-      },
-      { collection: "ai_locks" },
-    ),
-  );
+const LockModel = new Model<LockDoc>("ai_locks", () => ({
+  releasedAt: null,
+}));
 
-const SpendModel =
-  (mongoose.models.AiSpend as mongoose.Model<SpendDoc>) ??
-  mongoose.model<SpendDoc>(
-    "AiSpend",
-    new mongoose.Schema(
-      {
-        day: { type: String, required: true, unique: true },
-        inputTokens: { type: Number, required: true, default: 0 },
-        outputTokens: { type: Number, required: true, default: 0 },
-        usd: { type: Number, required: true, default: 0 },
-      },
-      { collection: "ai_spend" },
-    ),
-  );
+const SpendModel = new Model<SpendDoc>("ai_spend", () => ({}));
 
 const recentRequests = new Map<string, number[]>();
 
@@ -203,7 +172,7 @@ export async function completeAiOperation(
   additionalUsd = 0,
 ): Promise<void> {
   await connectDb();
-  await LockModel.updateOne({ _id: reservation.lockId, accountId: reservation.accountId }, { releasedAt: new Date() });
+  await LockModel.updateOne({ _id: toId(reservation.lockId), accountId: reservation.accountId }, { releasedAt: new Date() });
   await SpendModel.updateOne(
     { day: reservation.day },
     {
@@ -220,7 +189,7 @@ export async function completeAiOperation(
 /** Releases the reservation without consuming (failure / unsupported). */
 export async function failAiOperation(reservation: AiReservation, usage: TokenUsage | null): Promise<void> {
   await connectDb();
-  await LockModel.updateOne({ _id: reservation.lockId, accountId: reservation.accountId }, { releasedAt: new Date() });
+  await LockModel.updateOne({ _id: toId(reservation.lockId), accountId: reservation.accountId }, { releasedAt: new Date() });
   await UsageModel.updateOne(
     { accountId: reservation.accountId, day: reservation.day, count: { $gt: 0 } },
     { $inc: { count: -1 } },

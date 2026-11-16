@@ -1,237 +1,324 @@
-import mongoose, { Schema, type Model, type InferSchemaType } from "mongoose";
+import { ObjectId, type Collection, type Db, type Filter, type OptionalUnlessRequiredId } from "mongodb";
 import { newId } from "./ids";
+import { getDb } from "./db";
 
 /**
- * Auth.js v5 (MongoDB adapter) owns the core identity fields; passwordHash is
- * null for Google-only accounts. email is unique and lowercased.
+ * Plain typed documents mirroring the shapes mongoose previously wrote to
+ * Atlas. The mongodb driver returns these as-is (always includes _id), so no
+ * hydration or lean() conversion is needed.
  */
-const userSchema = new Schema(
-  {
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    emailVerified: { type: Date, default: null },
-    name: { type: String, default: null },
-    image: { type: String, default: null },
-    passwordHash: { type: String, default: null },
-    /** Stripe billing snapshot; subscriptionStatus is the last-seen Stripe status. */
-    stripeCustomerId: { type: String, default: null },
-    stripeSubscriptionId: { type: String, default: null },
-    subscriptionStatus: { type: String, default: null },
-    proSince: { type: Date, default: null },
-    proUntil: { type: Date, default: null },
-    proCancelAtPeriodEnd: { type: Boolean, default: false },
-    /** Submissions rejected this month because the free cap was reached. */
-    quotaRejectedMonth: { type: String, default: null },
-    quotaRejectedCount: { type: Number, default: 0 },
-    createdAt: { type: Date, required: true, default: () => new Date() },
-  },
-  { collection: "users" },
-);
+export interface UserDoc {
+  _id: ObjectId;
+  email: string;
+  emailVerified: Date | null;
+  name: string | null;
+  image: string | null;
+  passwordHash: string | null;
+  /** Stripe billing snapshot; subscriptionStatus is the last-seen Stripe status. */
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  subscriptionStatus: string | null;
+  proSince: Date | null;
+  proUntil: Date | null;
+  proCancelAtPeriodEnd: boolean;
+  /** Submissions rejected this month because the free cap was reached. */
+  quotaRejectedMonth: string | null;
+  quotaRejectedCount: number;
+  createdAt: Date;
+}
 
-const verificationTokenSchema = new Schema(
-  {
-    userId: { type: String, required: true },
-    tokenHash: { type: String, required: true, unique: true },
-    purpose: { type: String, enum: ["verify", "reset"], required: true },
-    expiresAt: { type: Date, required: true },
-    usedAt: { type: Date, default: null },
-    createdAt: { type: Date, required: true, default: () => new Date() },
-  },
-  { collection: "verification_tokens" },
-);
-verificationTokenSchema.index({ userId: 1, purpose: 1 });
+export interface VerificationTokenDoc {
+  _id: ObjectId;
+  userId: string;
+  tokenHash: string;
+  purpose: "verify" | "reset";
+  expiresAt: Date;
+  usedAt: Date | null;
+  createdAt: Date;
+}
 
-const fieldSubSchema = new Schema(
-  {
-    fieldId: { type: String, required: true },
-    type: {
-      type: String,
-      required: true,
-      enum: [
-        "short_text",
-        "long_text",
-        "email",
-        "number",
-        "date",
-        "single_choice",
-        "multiple_choice",
-        "rating",
-      ],
-    },
-    label: { type: String, required: true },
-    description: { type: String, default: null },
-    required: { type: Boolean, default: false },
-    options: [
-      new Schema(
-        {
-          optionId: { type: String, required: true },
-          label: { type: String, required: true },
-        },
-        { _id: false },
-      ),
-    ],
-    ratingMax: { type: Number, default: null },
-    placeholder: { type: String, default: null },
-    conditionalRule: {
-      type: new Schema(
-        {
-          fieldId: { type: String, required: true },
-          operator: { type: String, required: true },
-          value: { type: Schema.Types.Mixed, required: true },
-        },
-        { _id: false },
-      ),
-      default: null,
-    },
-  },
-  { _id: false },
-);
+export interface FormFieldDoc {
+  fieldId: string;
+  type: "short_text" | "long_text" | "email" | "number" | "date" | "single_choice" | "multiple_choice" | "rating";
+  label: string;
+  description: string | null;
+  required: boolean;
+  options: { optionId: string; label: string }[] | null;
+  ratingMax: number | null;
+  placeholder?: string | null;
+  conditionalRule: { fieldId: string; operator: string; value: unknown } | null;
+}
+
+export interface FormDraftDoc {
+  title: string;
+  description: string | null;
+  fields: FormFieldDoc[];
+}
+
+export interface FormDoc {
+  _id: ObjectId;
+  formId: string;
+  ownerId: string;
+  title: string;
+  description: string | null;
+  draft: FormDraftDoc;
+  status: "draft" | "published" | "closed" | "archived";
+  versionCounter: number;
+  latestVersionId: string | null;
+  notifyEmail: string | null;
+  /**
+   * Auto-send submission notifications. Default true covers new forms;
+   * forms created before this field existed have no value, and an absent
+   * field reads as off so legacy forms stay silent until toggled.
+   */
+  emailNotifications?: boolean;
+  /** Consecutive failed notification sends; reset on a success. */
+  notificationFailureCount: number;
+  /** Set after repeated send failures; auto-email stays off until re-enabled. */
+  notificationsDisabledAt: Date | null;
+  notificationsDisabledReason: string | null;
+  /** Daily send-cap bookkeeping (UTC date string + count). */
+  notificationsSentOn: string | null;
+  notificationsSentCount: number;
+  closedAt: Date | null;
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface FormVersionDoc {
+  _id: ObjectId;
+  versionId: string;
+  formId: string;
+  versionNumber: number;
+  definition: FormDraftDoc;
+  publishedAt: Date;
+}
+
+export interface SubmissionDoc {
+  _id: ObjectId;
+  submissionId: string;
+  formId: string;
+  versionId: string;
+  answers: { fieldId: string; value: unknown; optionIds: string[] }[];
+  submittedAt: Date;
+}
+
+export interface ApiTokenDoc {
+  _id: ObjectId;
+  tokenId: string;
+  userId: string;
+  name: string;
+  keyHash: string;
+  keyPrefix: string;
+  revokedAt: Date | null;
+  lastUsedAt: Date | null;
+  createdAt: Date;
+}
+
+/** Casts a stored string id (e.g. a serialized user id) back to ObjectId. */
+export function toId(id: string): ObjectId {
+  return new ObjectId(id);
+}
+
+type UpdateSpec = Record<string, unknown>;
+
+/** Wraps bare field updates in $set like mongoose did; $-operators pass through. */
+function normalizeUpdate(update: UpdateSpec): UpdateSpec {
+  return Object.keys(update).some((k) => k.startsWith("$")) ? update : { $set: update };
+}
+
+interface FindOneAndUpdateOptions {
+  new?: boolean;
+  upsert?: boolean;
+  returnDocument?: "after" | "before";
+  projection?: Record<string, unknown>;
+}
+
+/** Awaitable find chain covering sort/limit/lean as used across the app. */
+class FindQuery<T extends Doc> implements PromiseLike<T[]> {
+  #exec: () => Promise<T[]>;
+
+  constructor(
+    private col: () => Promise<Collection<T>>,
+    private filter: Filter<T>,
+    private sortSpec: Record<string, 1 | -1> = {},
+    private limitN?: number,
+    private projection?: Record<string, unknown>,
+  ) {
+    this.#exec = async () => {
+      const options: Record<string, unknown> = {};
+      if (Object.keys(this.sortSpec).length > 0) options.sort = this.sortSpec;
+      if (this.limitN !== undefined) options.limit = this.limitN;
+      if (this.projection) options.projection = this.projection;
+      return (await this.col()).find(this.filter, options).toArray() as Promise<T[]>;
+    };
+  }
+
+  sort(spec: Record<string, 1 | -1>): FindQuery<T> {
+    return new FindQuery(this.col, this.filter, spec, this.limitN, this.projection);
+  }
+
+  limit(n: number): FindQuery<T> {
+    return new FindQuery(this.col, this.filter, this.sortSpec, n, this.projection);
+  }
+
+  /** Kept for call-site compatibility with the mongoose API; driver docs are already plain. */
+  lean(): Promise<T[]> {
+    return this.#exec();
+  }
+
+  then<R1 = T[], R2 = never>(
+    onfulfilled?: ((value: T[]) => R1 | PromiseLike<R1>) | null,
+    onrejected?: ((reason: unknown) => R2 | PromiseLike<R2>) | null,
+  ): PromiseLike<R1 | R2> {
+    return this.#exec().then(onfulfilled, onrejected);
+  }
+}
+
+type DefaultsFactory<T> = () => Partial<T>;
+
+/** Any stored document: plain object with an ObjectId _id. */
+type Doc = { _id: ObjectId };
+
+/**
+ * Minimal model facade over one collection: the subset of the mongoose model
+ * API this app uses, backed by the raw mongodb driver (required for
+ * Cloudflare Workers nodejs_compat; mongoose is not Workers-compatible).
+ */
+export class Model<T extends Doc> {
+  constructor(
+    private collectionName: string,
+    private defaults: DefaultsFactory<T>,
+  ) {}
+
+  private async col(): Promise<Collection<T>> {
+    const db: Db = await getDb();
+    return db.collection<T>(this.collectionName);
+  }
+
+  async findOne(filter: Filter<T>, opts: { projection?: Record<string, unknown> } = {}): Promise<T | null> {
+    // Collection<T> is typed to return WithId<T>; stored docs already carry _id.
+    return (await this.col()).findOne(filter, opts) as unknown as T | null;
+  }
+
+  /** Accepts a hex ObjectId string; null for malformed ids (not an error). */
+  async findById(id: string): Promise<T | null> {
+    if (!ObjectId.isValid(id)) return null;
+    return this.findOne({ _id: new ObjectId(id) } as Filter<T>);
+  }
+
+  find(filter: Filter<T>, opts: { projection?: Record<string, unknown> } = {}): FindQuery<T> {
+    return new FindQuery(() => this.col(), filter, {}, undefined, opts.projection);
+  }
+
+  /** Applies schema defaults, inserts, and returns the full stored doc. */
+  async create(data: Partial<T>): Promise<T> {
+    const doc = { ...this.defaults(), ...data } as OptionalUnlessRequiredId<T>;
+    const result = await (await this.col()).insertOne(doc);
+    return { ...(doc as T), _id: result.insertedId } as T;
+  }
+
+  async updateOne(
+    filter: Filter<T>,
+    update: UpdateSpec,
+    opts: { upsert?: boolean } = {},
+  ): Promise<{ matchedCount: number; modifiedCount: number }> {
+    const result = await (await this.col()).updateOne(filter, normalizeUpdate(update), { upsert: opts.upsert });
+    return { matchedCount: result.matchedCount, modifiedCount: result.modifiedCount };
+  }
+
+  async deleteOne(filter: Filter<T>): Promise<{ deletedCount: number }> {
+    const result = await (await this.col()).deleteOne(filter);
+    return { deletedCount: result.deletedCount ?? 0 };
+  }
+
+  async deleteMany(filter: Filter<T>): Promise<{ deletedCount: number }> {
+    const result = await (await this.col()).deleteMany(filter);
+    return { deletedCount: result.deletedCount ?? 0 };
+  }
+
+  async findOneAndUpdate(
+    filter: Filter<T>,
+    update: UpdateSpec,
+    opts: FindOneAndUpdateOptions = {},
+  ): Promise<T | null> {
+    const after = opts.new === true || opts.returnDocument === "after";
+    return (await this.col()).findOneAndUpdate(filter, normalizeUpdate(update), {
+      returnDocument: after ? "after" : "before",
+      upsert: opts.upsert,
+      projection: opts.projection,
+      includeResultMetadata: false,
+    }) as unknown as T | null;
+  }
+
+  async countDocuments(filter: Filter<T>): Promise<number> {
+    return (await this.col()).countDocuments(filter);
+  }
+}
+
+/* Auth.js v5 (MongoDB adapter) owns the core identity fields; passwordHash is
+ * null for Google-only accounts. email is unique and lowercased. */
+export const User = new Model<UserDoc>("users", () => ({
+  emailVerified: null,
+  name: null,
+  image: null,
+  passwordHash: null,
+  stripeCustomerId: null,
+  stripeSubscriptionId: null,
+  subscriptionStatus: null,
+  proSince: null,
+  proUntil: null,
+  proCancelAtPeriodEnd: false,
+  quotaRejectedMonth: null,
+  quotaRejectedCount: 0,
+  createdAt: new Date(),
+}));
+
+export const VerificationToken = new Model<VerificationTokenDoc>("verification_tokens", () => ({
+  usedAt: null,
+  createdAt: new Date(),
+}));
 
 /**
  * The creator's editable container. `draft` holds the working definition;
  * published snapshots live in FormVersion and never change. Status tracks
  * the public lifecycle: draft → published → (closed | archived).
  */
-const formSchema = new Schema(
-  {
-    formId: { type: String, required: true, default: () => newId("frm_"), unique: true },
-    ownerId: { type: String, required: true },
-    title: { type: String, required: true },
-    description: { type: String, default: null },
-    draft: {
-      type: new Schema(
-        {
-          title: { type: String, required: true },
-          description: { type: String, default: null },
-          fields: { type: [fieldSubSchema], default: [] },
-        },
-        { _id: false },
-      ),
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ["draft", "published", "closed", "archived"],
-      required: true,
-      default: "draft",
-    },
-    versionCounter: { type: Number, required: true, default: 0 },
-    latestVersionId: { type: String, default: null },
-    /** Optional creator notification address; null = creator's verified account email. */
-    notifyEmail: { type: String, default: null },
-    /**
-     * Auto-send submission notifications. Schema default true covers new
-     * forms; forms created before this field existed have no value, and an
-     * absent field reads as off so legacy forms stay silent until toggled.
-     */
-    emailNotifications: { type: Boolean, default: true },
-    /** Consecutive failed notification sends; reset on a success. */
-    notificationFailureCount: { type: Number, default: 0 },
-    /** Set after repeated send failures; auto-email stays off until re-enabled. */
-    notificationsDisabledAt: { type: Date, default: null },
-    notificationsDisabledReason: { type: String, default: null },
-    /** Daily send-cap bookkeeping (UTC date string + count). */
-    notificationsSentOn: { type: String, default: null },
-    notificationsSentCount: { type: Number, default: 0 },
-    closedAt: { type: Date, default: null },
-    archivedAt: { type: Date, default: null },
-    createdAt: { type: Date, required: true, default: () => new Date() },
-    updatedAt: { type: Date, required: true, default: () => new Date() },
-  },
-  { collection: "forms" },
-);
-formSchema.index({ ownerId: 1, updatedAt: -1 });
+export const Form = new Model<FormDoc>("forms", () => ({
+  formId: newId("frm_"),
+  description: null,
+  status: "draft",
+  versionCounter: 0,
+  latestVersionId: null,
+  notifyEmail: null,
+  emailNotifications: true,
+  notificationFailureCount: 0,
+  notificationsDisabledAt: null,
+  notificationsDisabledReason: null,
+  notificationsSentOn: null,
+  notificationsSentCount: 0,
+  closedAt: null,
+  archivedAt: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+}));
 
 /** Immutable published snapshot; the public link serves the latest one. */
-const formVersionSchema = new Schema(
-  {
-    versionId: { type: String, required: true, default: () => newId("ver_"), unique: true },
-    formId: { type: String, required: true },
-    versionNumber: { type: Number, required: true },
-    definition: {
-      type: new Schema(
-        {
-          title: { type: String, required: true },
-          description: { type: String, default: null },
-          fields: { type: [fieldSubSchema], required: true },
-        },
-        { _id: false },
-      ),
-      required: true,
-    },
-    publishedAt: { type: Date, required: true, default: () => new Date() },
-  },
-  { collection: "form_versions" },
-);
-formVersionSchema.index({ formId: 1, versionNumber: -1 });
+export const FormVersion = new Model<FormVersionDoc>("form_versions", () => ({
+  versionId: newId("ver_"),
+  publishedAt: new Date(),
+}));
 
 /** Each submission is tied to the exact version the respondent answered. */
-const submissionSchema = new Schema(
-  {
-    submissionId: { type: String, required: true, default: () => newId("sub_"), unique: true },
-    formId: { type: String, required: true },
-    versionId: { type: String, required: true },
-    answers: [
-      new Schema(
-        {
-          fieldId: { type: String, required: true },
-          /** Text/email/number/date/rating answers. */
-          value: { type: Schema.Types.Mixed, default: null },
-          /** Choice answers reference the version's optionIds. */
-          optionIds: { type: [String], default: [] },
-        },
-        { _id: false },
-      ),
-    ],
-    submittedAt: { type: Date, required: true, default: () => new Date() },
-  },
-  { collection: "submissions" },
-);
-submissionSchema.index({ formId: 1, submittedAt: -1 });
-submissionSchema.index({ versionId: 1 });
-
-export type UserDoc = mongoose.HydratedDocument<InferSchemaType<typeof userSchema>>;
-export type VerificationTokenDoc = mongoose.HydratedDocument<
-  InferSchemaType<typeof verificationTokenSchema>
->;
-export type FormDoc = mongoose.HydratedDocument<InferSchemaType<typeof formSchema>>;
-export type FormVersionDoc = mongoose.HydratedDocument<InferSchemaType<typeof formVersionSchema>>;
-export type SubmissionDoc = mongoose.HydratedDocument<InferSchemaType<typeof submissionSchema>>;
-
-export const User: Model<UserDoc> =
-  (mongoose.models.User as Model<UserDoc>) ?? mongoose.model<UserDoc>("User", userSchema);
-
-export const VerificationToken: Model<VerificationTokenDoc> =
-  (mongoose.models.VerificationToken as Model<VerificationTokenDoc>) ??
-  mongoose.model<VerificationTokenDoc>("VerificationToken", verificationTokenSchema);
-
-export const Form: Model<FormDoc> =
-  (mongoose.models.Form as Model<FormDoc>) ?? mongoose.model<FormDoc>("Form", formSchema);
-
-export const FormVersion: Model<FormVersionDoc> =
-  (mongoose.models.FormVersion as Model<FormVersionDoc>) ??
-  mongoose.model<FormVersionDoc>("FormVersion", formVersionSchema);
-
-export const Submission: Model<SubmissionDoc> =
-  (mongoose.models.Submission as Model<SubmissionDoc>) ??
-  mongoose.model<SubmissionDoc>("Submission", submissionSchema);
+export const Submission = new Model<SubmissionDoc>("submissions", () => ({
+  submissionId: newId("sub_"),
+  submittedAt: new Date(),
+}));
 
 /** Bearer tokens for the authenticated MCP server (fl_live_…). */
-const apiTokenSchema = new Schema(
-  {
-    tokenId: { type: String, required: true, default: () => newId("tok_"), unique: true },
-    userId: { type: String, required: true },
-    name: { type: String, required: true },
-    keyHash: { type: String, required: true, unique: true },
-    keyPrefix: { type: String, required: true },
-    revokedAt: { type: Date, default: null },
-    lastUsedAt: { type: Date, default: null },
-    createdAt: { type: Date, required: true, default: () => new Date() },
-  },
-  { collection: "api_tokens" },
-);
-apiTokenSchema.index({ userId: 1 });
-
-export type ApiTokenDoc = mongoose.HydratedDocument<InferSchemaType<typeof apiTokenSchema>>;
-
-export const ApiToken: Model<ApiTokenDoc> =
-  (mongoose.models.ApiToken as Model<ApiTokenDoc>) ?? mongoose.model<ApiTokenDoc>("ApiToken", apiTokenSchema);
+export const ApiToken = new Model<ApiTokenDoc>("api_tokens", () => ({
+  revokedAt: null,
+  lastUsedAt: null,
+  createdAt: new Date(),
+}));

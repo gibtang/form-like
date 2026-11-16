@@ -1,6 +1,6 @@
 import "server-only";
 
-import { Form, Submission, User, type UserDoc } from "./models";
+import { Form, Submission, User, toId, type UserDoc } from "./models";
 import { isStripeConfigured, stripe } from "./stripe";
 
 /**
@@ -36,7 +36,7 @@ export interface SubmissionUsage {
 }
 
 export async function monthlySubmissionUsage(ownerId: string): Promise<SubmissionUsage> {
-  const user = await User.findOne({ _id: ownerId }).lean();
+  const user = await User.findOne({ _id: toId(ownerId) });
   if (user && isPro(user)) {
     const pro = await countMonthlySubmissions(ownerId);
     return { used: pro, cap: null, remaining: null, pro: true };
@@ -46,7 +46,7 @@ export async function monthlySubmissionUsage(ownerId: string): Promise<Submissio
 }
 
 async function countMonthlySubmissions(ownerId: string): Promise<number> {
-  const forms = await Form.find({ ownerId }, { formId: 1 }).lean();
+  const forms = await Form.find({ ownerId }, { projection: { formId: 1 } });
   if (forms.length === 0) return 0;
   return Submission.countDocuments({
     formId: { $in: forms.map((f) => f.formId) },
@@ -56,7 +56,7 @@ async function countMonthlySubmissions(ownerId: string): Promise<number> {
 
 /** Server-side gate for the submission endpoint. */
 export async function checkSubmissionAllowance(ownerId: string): Promise<{ allowed: boolean; pro: boolean }> {
-  const user = await User.findOne({ _id: ownerId }, { subscriptionStatus: 1, proUntil: 1 }).lean();
+  const user = await User.findOne({ _id: toId(ownerId) }, { projection: { subscriptionStatus: 1, proUntil: 1 } });
   if (user && isPro(user)) return { allowed: true, pro: true };
   const used = await countMonthlySubmissions(ownerId);
   return { allowed: used < FREE_SUBMISSIONS_PER_MONTH, pro: false };
@@ -66,10 +66,10 @@ export async function checkSubmissionAllowance(ownerId: string): Promise<{ allow
 export async function recordQuotaRejection(ownerId: string): Promise<void> {
   const month = new Date().toISOString().slice(0, 7);
   await User.updateOne(
-    { _id: ownerId, quotaRejectedMonth: { $ne: month } },
+    { _id: toId(ownerId), quotaRejectedMonth: { $ne: month } },
     { quotaRejectedMonth: month, quotaRejectedCount: 0 },
   );
-  await User.updateOne({ _id: ownerId, quotaRejectedMonth: month }, { $inc: { quotaRejectedCount: 1 } });
+  await User.updateOne({ _id: toId(ownerId), quotaRejectedMonth: month }, { $inc: { quotaRejectedCount: 1 } });
 }
 
 /**

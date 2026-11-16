@@ -84,7 +84,7 @@ export async function proposeAction(formId: string, prompt: string): Promise<Pro
     return { supported: false, error: "provider_failure", message: "Describe the form or change you want." };
   }
   await connectDb();
-  const form = await Form.findOne({ formId, ownerId: String(user._id) }).lean();
+  const form = await Form.findOne({ formId, ownerId: String(user._id) });
   if (!form) {
     return { supported: false, error: "provider_failure", message: "Form not found." };
   }

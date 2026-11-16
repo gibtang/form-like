@@ -10,7 +10,7 @@ export async function deleteSubmissionAction(formId: string, submissionId: strin
   const user = await requireUser();
   if (!user) redirect("/login");
   await connectDb();
-  const form = await Form.findOne({ formId, ownerId: String(user._id) }).lean();
+  const form = await Form.findOne({ formId, ownerId: String(user._id) });
   if (!form) redirect(`/dashboard/forms/${formId}/submissions`);
   await Submission.deleteOne({ submissionId, formId: form.formId });
   redirect(`/dashboard/forms/${formId}/submissions`);

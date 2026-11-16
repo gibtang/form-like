@@ -52,7 +52,15 @@ export async function publishFormAction(formId: string): Promise<LifecycleResult
   form.latestVersionId = version.versionId;
   if (form.status !== "closed") form.status = "published";
   form.updatedAt = new Date();
-  await form.save();
+  await Form.updateOne(
+    { formId: form.formId },
+    {
+      versionCounter: form.versionCounter,
+      latestVersionId: form.latestVersionId,
+      status: form.status,
+      updatedAt: form.updatedAt,
+    },
+  );
 
   revalidatePath(`/dashboard/forms/${formId}`);
   revalidatePath(`/f/${formId}`);
@@ -65,10 +73,11 @@ export async function closeFormAction(formId: string): Promise<LifecycleResult> 
   if (form.status !== "published") {
     return { ok: false, error: "Only a published form can be closed." };
   }
-  form.status = "closed";
-  form.closedAt = new Date();
-  form.updatedAt = new Date();
-  await form.save();
+  const status = "closed";
+  const closedAt = new Date();
+  await Form.updateOne({ formId: form.formId }, { status, closedAt, updatedAt: closedAt });
+  form.status = status;
+  form.closedAt = closedAt;
   revalidatePath(`/f/${formId}`);
   return { ok: true };
 }
@@ -79,10 +88,13 @@ export async function reopenFormAction(formId: string): Promise<LifecycleResult>
   if (form.status !== "closed") {
     return { ok: false, error: "Only a closed form can be reopened." };
   }
-  form.status = "published";
-  form.closedAt = null;
-  form.updatedAt = new Date();
-  await form.save();
+  const status = "published";
+  const closedAt = null;
+  const updatedAt = new Date();
+  await Form.updateOne({ formId: form.formId }, { status, closedAt, updatedAt });
+  form.status = status;
+  form.closedAt = closedAt;
+  form.updatedAt = updatedAt;
   revalidatePath(`/f/${formId}`);
   return { ok: true };
 }
@@ -90,10 +102,13 @@ export async function reopenFormAction(formId: string): Promise<LifecycleResult>
 export async function archiveFormAction(formId: string): Promise<LifecycleResult> {
   const form = await ownedForm(formId);
   if (!form) return { ok: false, error: "Form not found" };
-  form.status = "archived";
-  form.archivedAt = new Date();
-  form.updatedAt = new Date();
-  await form.save();
+  const status = "archived";
+  const archivedAt = new Date();
+  const updatedAt = new Date();
+  await Form.updateOne({ formId: form.formId }, { status, archivedAt, updatedAt });
+  form.status = status;
+  form.archivedAt = archivedAt;
+  form.updatedAt = updatedAt;
   revalidatePath(`/f/${formId}`);
   return { ok: true };
 }
@@ -106,10 +121,13 @@ export async function unarchiveFormAction(formId: string): Promise<LifecycleResu
   }
   // A form with a published version returns to published; a never-published
   // draft returns to draft. (A closed state is not preserved across archive.)
-  form.status = form.latestVersionId ? "published" : "draft";
-  form.archivedAt = null;
-  form.updatedAt = new Date();
-  await form.save();
+  const status = form.latestVersionId ? "published" : "draft";
+  const archivedAt = null;
+  const updatedAt = new Date();
+  await Form.updateOne({ formId: form.formId }, { status, archivedAt, updatedAt });
+  form.status = status;
+  form.archivedAt = archivedAt;
+  form.updatedAt = updatedAt;
   revalidatePath(`/f/${formId}`);
   return { ok: true };
 }

@@ -36,7 +36,7 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
   }
 
   await connectDb();
-  const form = await Form.findOne({ formId, status: { $in: ["published", "closed"] } }).lean();
+  const form = await Form.findOne({ formId, status: { $in: ["published", "closed"] } });
   if (!form) {
     return NextResponse.json({ ok: false, error: "This form does not accept submissions." }, { status: 404 });
   }
@@ -44,7 +44,7 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
     return NextResponse.json({ ok: false, error: "closed" }, { status: 409 });
   }
 
-  const version = await FormVersion.findOne({ formId, versionId: body.data.versionId }).lean();
+  const version = await FormVersion.findOne({ formId, versionId: body.data.versionId });
   if (!version) {
     return NextResponse.json({ ok: false, error: "Unknown form version." }, { status: 404 });
   }

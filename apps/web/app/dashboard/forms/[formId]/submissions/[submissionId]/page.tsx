@@ -18,11 +18,11 @@ export default async function SubmissionDetailPage({
   if (!user) redirect("/login");
   await connectDb();
 
-  const form = await Form.findOne({ formId, ownerId: String(user._id) }).lean();
+  const form = await Form.findOne({ formId, ownerId: String(user._id) });
   if (!form) notFound();
-  const submission = await Submission.findOne({ submissionId, formId: form.formId }).lean();
+  const submission = await Submission.findOne({ submissionId, formId: form.formId });
   if (!submission) notFound();
-  const version = await FormVersion.findOne({ formId: form.formId, versionId: submission.versionId }).lean();
+  const version = await FormVersion.findOne({ formId: form.formId, versionId: submission.versionId });
   const parsed = version ? formDefinitionSchema.safeParse(version.definition) : null;
   if (!version || !parsed || !parsed.success) notFound();
   const def = parsed.data;

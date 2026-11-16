@@ -1,4 +1,4 @@
-import { Form, User } from "./models";
+import { Form, User, toId } from "./models";
 
 /**
  * Submission-notification mechanics: recipient resolution, the per-form daily
@@ -19,7 +19,7 @@ export async function resolveNotificationRecipient(form: {
   ownerId: string;
 }): Promise<string | null> {
   if (form.notifyEmail) return form.notifyEmail;
-  const owner = await User.findOne({ _id: form.ownerId }).lean();
+  const owner = await User.findOne({ _id: toId(form.ownerId) });
   if (!owner?.email || !owner.emailVerified) return null;
   return owner.email;
 }
@@ -52,7 +52,7 @@ export async function recordNotificationFailure(formId: string): Promise<boolean
     { formId, notificationsDisabledAt: null },
     { $inc: { notificationFailureCount: 1 } },
     { new: true, projection: { notificationFailureCount: 1 } },
-  ).lean();
+  );
   if (!form) return false; // already disabled
   if ((form.notificationFailureCount ?? 0) >= NOTIFICATION_MAX_CONSECUTIVE_FAILURES) {
     await Form.updateOne(

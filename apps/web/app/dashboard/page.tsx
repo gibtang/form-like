@@ -18,8 +18,8 @@ export default async function DashboardPage() {
   const usage = await monthlySubmissionUsage(String(user._id));
   const quotaUser = await User.findOne(
     { _id: user._id },
-    { quotaRejectedMonth: 1, quotaRejectedCount: 1 },
-  ).lean();
+    { projection: { quotaRejectedMonth: 1, quotaRejectedCount: 1 } },
+  );
   const rejectedThisMonth =
     quotaUser?.quotaRejectedMonth === new Date().toISOString().slice(0, 7) ? (quotaUser.quotaRejectedCount ?? 0) : 0;
   const usagePct = usage.cap ? Math.min(100, Math.round((usage.used / usage.cap) * 100)) : 0;
