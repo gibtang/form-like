@@ -14,6 +14,16 @@ export interface UserDoc {
   name: string | null;
   image: string | null;
   passwordHash: string | null;
+  /** Stripe billing snapshot; subscriptionStatus is the last-seen Stripe status. */
+  stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+  subscriptionStatus: string | null;
+  proSince: Date | null;
+  proUntil: Date | null;
+  proCancelAtPeriodEnd: boolean;
+  /** Submissions rejected this month because the free cap was reached. */
+  quotaRejectedMonth: string | null;
+  quotaRejectedCount: number;
   createdAt: Date;
 }
 
@@ -56,6 +66,20 @@ export interface FormDoc {
   versionCounter: number;
   latestVersionId: string | null;
   notifyEmail: string | null;
+  /**
+   * Auto-send submission notifications. Default true covers new forms;
+   * forms created before this field existed have no value, and an absent
+   * field reads as off so legacy forms stay silent until toggled.
+   */
+  emailNotifications?: boolean;
+  /** Consecutive failed notification sends; reset on a success. */
+  notificationFailureCount: number;
+  /** Set after repeated send failures; auto-email stays off until re-enabled. */
+  notificationsDisabledAt: Date | null;
+  notificationsDisabledReason: string | null;
+  /** Daily send-cap bookkeeping (UTC date string + count). */
+  notificationsSentOn: string | null;
+  notificationsSentCount: number;
   closedAt: Date | null;
   archivedAt: Date | null;
   createdAt: Date;
@@ -108,6 +132,7 @@ interface FindOneAndUpdateOptions {
   new?: boolean;
   upsert?: boolean;
   returnDocument?: "after" | "before";
+  projection?: Record<string, unknown>;
 }
 
 /** Awaitable find chain covering sort/limit/lean as used across the app. */
@@ -119,21 +144,23 @@ class FindQuery<T extends Doc> implements PromiseLike<T[]> {
     private filter: Filter<T>,
     private sortSpec: Record<string, 1 | -1> = {},
     private limitN?: number,
+    private projection?: Record<string, unknown>,
   ) {
     this.#exec = async () => {
       const options: Record<string, unknown> = {};
       if (Object.keys(this.sortSpec).length > 0) options.sort = this.sortSpec;
       if (this.limitN !== undefined) options.limit = this.limitN;
+      if (this.projection) options.projection = this.projection;
       return (await this.col()).find(this.filter, options).toArray() as Promise<T[]>;
     };
   }
 
   sort(spec: Record<string, 1 | -1>): FindQuery<T> {
-    return new FindQuery(this.col, this.filter, spec, this.limitN);
+    return new FindQuery(this.col, this.filter, spec, this.limitN, this.projection);
   }
 
   limit(n: number): FindQuery<T> {
-    return new FindQuery(this.col, this.filter, this.sortSpec, n);
+    return new FindQuery(this.col, this.filter, this.sortSpec, n, this.projection);
   }
 
   /** Kept for call-site compatibility with the mongoose API; driver docs are already plain. */
@@ -170,9 +197,9 @@ export class Model<T extends Doc> {
     return db.collection<T>(this.collectionName);
   }
 
-  async findOne(filter: Filter<T>): Promise<T | null> {
+  async findOne(filter: Filter<T>, opts: { projection?: Record<string, unknown> } = {}): Promise<T | null> {
     // Collection<T> is typed to return WithId<T>; stored docs already carry _id.
-    return (await this.col()).findOne(filter) as unknown as T | null;
+    return (await this.col()).findOne(filter, opts) as unknown as T | null;
   }
 
   /** Accepts a hex ObjectId string; null for malformed ids (not an error). */
@@ -181,8 +208,8 @@ export class Model<T extends Doc> {
     return this.findOne({ _id: new ObjectId(id) } as Filter<T>);
   }
 
-  find(filter: Filter<T>): FindQuery<T> {
-    return new FindQuery(() => this.col(), filter);
+  find(filter: Filter<T>, opts: { projection?: Record<string, unknown> } = {}): FindQuery<T> {
+    return new FindQuery(() => this.col(), filter, {}, undefined, opts.projection);
   }
 
   /** Applies schema defaults, inserts, and returns the full stored doc. */
@@ -220,8 +247,13 @@ export class Model<T extends Doc> {
     return (await this.col()).findOneAndUpdate(filter, normalizeUpdate(update), {
       returnDocument: after ? "after" : "before",
       upsert: opts.upsert,
+      projection: opts.projection,
       includeResultMetadata: false,
     }) as unknown as T | null;
+  }
+
+  async countDocuments(filter: Filter<T>): Promise<number> {
+    return (await this.col()).countDocuments(filter);
   }
 }
 
@@ -232,6 +264,14 @@ export const User = new Model<UserDoc>("users", () => ({
   name: null,
   image: null,
   passwordHash: null,
+  stripeCustomerId: null,
+  stripeSubscriptionId: null,
+  subscriptionStatus: null,
+  proSince: null,
+  proUntil: null,
+  proCancelAtPeriodEnd: false,
+  quotaRejectedMonth: null,
+  quotaRejectedCount: 0,
   createdAt: new Date(),
 }));
 
@@ -252,6 +292,12 @@ export const Form = new Model<FormDoc>("forms", () => ({
   versionCounter: 0,
   latestVersionId: null,
   notifyEmail: null,
+  emailNotifications: true,
+  notificationFailureCount: 0,
+  notificationsDisabledAt: null,
+  notificationsDisabledReason: null,
+  notificationsSentOn: null,
+  notificationsSentCount: 0,
   closedAt: null,
   archivedAt: null,
   createdAt: new Date(),

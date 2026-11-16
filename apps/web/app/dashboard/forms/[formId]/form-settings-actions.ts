@@ -48,7 +48,7 @@ export async function reenableNotificationsAction(formId: string): Promise<Notif
   const user = await requireUser();
   if (!user) return { ok: false, error: "Not signed in" };
   await connectDb();
-  const form = await Form.findOne({ formId, ownerId: String(user._id) }, { _id: 1 }).lean();
+  const form = await Form.findOne({ formId, ownerId: String(user._id) }, { projection: { _id: 1 } });
   if (!form) return { ok: false, error: "Form not found" };
   await reenableNotifications(formId);
   return { ok: true };
