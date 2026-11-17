@@ -103,9 +103,9 @@ export default async function SubmissionsPage({ params }: { params: Promise<{ fo
             </thead>
             <tbody>
               {submissions.map((s) => {
-                const rowParsed = parsedByVers.get(s.versionId);
+                const rowParsed = s.versionId ? parsedByVers.get(s.versionId) : undefined;
                 const vDef = rowParsed?.ok ? (rowParsed.data ?? null) : null;
-                const vNum = versionById.get(s.versionId)?.versionNumber ?? "?";
+                const vNum = s.versionId ? (versionById.get(s.versionId)?.versionNumber ?? "?") : "endpoint";
                 return (
                   <tr key={s.submissionId} className="border-b border-[var(--border)] last:border-0">
                     <td className="px-3 py-2 whitespace-nowrap">{new Date(s.submittedAt).toLocaleString()}</td>

@@ -53,8 +53,8 @@ export const GET = withApiErrors("api/submissions/export", async function GET(re
     }
   }
 
-  const optionLabel = (versionId: string, fieldId: string, optionId: string): string => {
-    const v = versions.find((ver) => ver.versionId === versionId);
+  const optionLabel = (versionId: string | null, fieldId: string, optionId: string): string => {
+    const v = versionId ? versions.find((ver) => ver.versionId === versionId) : undefined;
     const field = v?.definition?.fields?.find((f: { fieldId: string }) => f.fieldId === fieldId);
     return field?.options?.find((o: { optionId: string }) => o.optionId === optionId)?.label ?? optionId;
   };
@@ -63,13 +63,16 @@ export const GET = withApiErrors("api/submissions/export", async function GET(re
     ["submissionId", "submittedAt", "version", ...order.map((id) => csvCell(labels.get(id) ?? id))].join(","),
   ];
   for (const s of submissions) {
-    const cells = [s.submissionId, new Date(s.submittedAt).toISOString(), String(s.versionId)];
+    const cells = [s.submissionId, new Date(s.submittedAt).toISOString(), s.versionId ?? "endpoint"];
     for (const fieldId of order) {
       const a = s.answers.find((x: { fieldId: string }) => x.fieldId === fieldId);
       let value = "";
       if (a) {
         if (a.optionIds.length > 0) {
-          value = a.optionIds.map((oid: string) => optionLabel(s.versionId, fieldId, oid)).join("; ");
+          value = a.optionIds.map((oid: string) => optionLabel(s.versionId ?? null, fieldId, oid)).join("; ");
+        } else if (a.value && typeof a.value === "object" && "fileName" in a.value) {
+          const f = a.value as { fileName?: unknown };
+          value = typeof f.fileName === "string" ? f.fileName : "[file]";
         } else if (a.value !== null && a.value !== undefined) {
           value = String(a.value);
         }

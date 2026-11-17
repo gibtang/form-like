@@ -13,6 +13,7 @@ import {
 } from "@/lib/notification";
 import { withApiErrors } from "@/lib/api-wrap";
 import { checkSubmissionAllowance, recordQuotaRejection } from "@/lib/billing";
+import { gaEventForUser } from "@/lib/analytics";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -84,6 +85,7 @@ export const POST = withApiErrors("api/f/submit", async function POST(req: NextR
   }
 
   const created = await Submission.create({ formId, versionId: version.versionId, answers });
+  await gaEventForUser(form.ownerId, "submission_received", { form_id: formId });
 
   // Submission notification — on by default for new forms, recipient is the
   // notifyEmail override or the creator's verified account email. A mail

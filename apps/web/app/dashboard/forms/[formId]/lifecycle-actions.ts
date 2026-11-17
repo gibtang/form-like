@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth-user";
+import { gaEventForUser } from "@/lib/analytics";
 import { connectDb } from "@/lib/db";
 import { Form, FormVersion, Submission } from "@/lib/models";
 import { formDefinitionSchema, type DefinitionIssue } from "@/lib/form-schema";
@@ -61,6 +62,8 @@ export async function publishFormAction(formId: string): Promise<LifecycleResult
       updatedAt: form.updatedAt,
     },
   );
+
+  await gaEventForUser(String(form.ownerId), "form_published", { form_id: form.formId, version_number: versionNumber });
 
   revalidatePath(`/dashboard/forms/${formId}`);
   revalidatePath(`/f/${formId}`);

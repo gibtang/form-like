@@ -80,6 +80,13 @@ export interface FormDoc {
   /** Daily send-cap bookkeeping (UTC date string + count). */
   notificationsSentOn: string | null;
   notificationsSentCount: number;
+  /**
+   * Endpoint-only mode (issue #26): a static-site POST target with its own
+   * access key. Key stored hashed; whitelist null = any origin allowed.
+   */
+  endpointEnabled: boolean;
+  endpointKeyHash: string | null;
+  endpointWhitelist: string[] | null;
   closedAt: Date | null;
   archivedAt: Date | null;
   createdAt: Date;
@@ -99,7 +106,8 @@ export interface SubmissionDoc {
   _id: ObjectId;
   submissionId: string;
   formId: string;
-  versionId: string;
+  /** null for endpoint-mode submissions (issue #26) — no published version. */
+  versionId: string | null;
   answers: { fieldId: string; value: unknown; optionIds: string[] }[];
   submittedAt: Date;
 }
@@ -298,6 +306,10 @@ export const Form = new Model<FormDoc>("forms", () => ({
   notificationsDisabledReason: null,
   notificationsSentOn: null,
   notificationsSentCount: 0,
+  /** Endpoint-only mode (issue #26): whitelist null = any origin allowed. */
+  endpointEnabled: false,
+  endpointKeyHash: null,
+  endpointWhitelist: null,
   closedAt: null,
   archivedAt: null,
   createdAt: new Date(),
@@ -313,6 +325,8 @@ export const FormVersion = new Model<FormVersionDoc>("form_versions", () => ({
 /** Each submission is tied to the exact version the respondent answered. */
 export const Submission = new Model<SubmissionDoc>("submissions", () => ({
   submissionId: newId("sub_"),
+  versionId: null,
+  answers: [],
   submittedAt: new Date(),
 }));
 

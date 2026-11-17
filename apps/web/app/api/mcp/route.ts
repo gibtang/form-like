@@ -299,7 +299,7 @@ function buildServer(userId: string): McpServer {
       return jsonResult({
         form: { formId: form.formId, title: form.title, status: form.status, ...formLinks(form) },
         submissions: submissions.map((s) => {
-          const v = versionById.get(s.versionId);
+          const v = s.versionId ? versionById.get(s.versionId) : undefined;
           return {
             submissionId: s.submissionId,
             submittedAt: s.submittedAt,

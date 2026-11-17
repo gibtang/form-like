@@ -22,10 +22,50 @@ export default async function SubmissionDetailPage({
   if (!form) notFound();
   const submission = await Submission.findOne({ submissionId, formId: form.formId });
   if (!submission) notFound();
-  const version = await FormVersion.findOne({ formId: form.formId, versionId: submission.versionId });
+  const version = submission.versionId
+    ? await FormVersion.findOne({ formId: form.formId, versionId: submission.versionId })
+    : null;
   const parsed = version ? formDefinitionSchema.safeParse(version.definition) : null;
-  if (!version || !parsed || !parsed.success) notFound();
-  const def = parsed.data;
+  const def = parsed && parsed.success ? parsed.data : null;
+
+  const answerText = (a: { value: unknown; optionIds: string[] }): string => {
+    if (a.value && typeof a.value === "object" && "fileName" in a.value) {
+      const f = a.value as { fileName?: unknown; size?: unknown; contentType?: unknown };
+      const name = typeof f.fileName === "string" ? f.fileName : "[file]";
+      const size = typeof f.size === "number" ? ` (${f.size} bytes)` : "";
+      return `${name}${size}`;
+    }
+    if (a.value !== null && a.value !== undefined && a.value !== "") return String(a.value);
+    return "—";
+  };
+
+  if (!def) {
+    // Endpoint-mode submission: raw field names as sent, no version wording.
+    return (
+      <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 p-6">
+        <Link href={`/dashboard/forms/${formId}/submissions`} className="text-sm text-[var(--text-muted)] hover:underline">
+          ← All submissions
+        </Link>
+        <div className="rounded-lg border border-[var(--border)] bg-white p-6">
+          <h1 className="text-lg font-semibold">Submission</h1>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
+            {new Date(submission.submittedAt).toLocaleString()} · endpoint · fields as sent
+          </p>
+          <dl className="mt-4 space-y-4">
+            {(submission.answers as { fieldId: string; value: unknown; optionIds: string[] }[]).map((a) => (
+              <div key={a.fieldId} className="border-b border-[var(--border)] pb-3 last:border-0 last:pb-0">
+                <dt className="text-sm font-medium text-[var(--text)]">{a.fieldId}</dt>
+                <dd data-testid={`answer-${a.fieldId}`} className="mt-0.5 text-sm text-[var(--text-muted)]">
+                  {answerText(a)}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
+        <DeleteSubmissionButton formId={formId} submissionId={submission.submissionId} />
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-4 p-6">
@@ -35,8 +75,8 @@ export default async function SubmissionDetailPage({
       <div className="rounded-lg border border-[var(--border)] bg-white p-6">
         <h1 className="text-lg font-semibold">Submission</h1>
         <p className="mt-1 text-sm text-[var(--text-muted)]">
-          {new Date(submission.submittedAt).toLocaleString()} · version {version.versionNumber} · original wording
-          preserved
+          {new Date(submission.submittedAt).toLocaleString()} · version {version?.versionNumber ?? "?"} · original
+          wording preserved
         </p>
         <dl className="mt-4 space-y-4">
           {def.fields.map((field) => {
