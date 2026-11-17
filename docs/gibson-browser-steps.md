@@ -1,67 +1,22 @@
 # Manual browser steps — form-like
 
-Everything an agent can't do (Google/Cloudflare dashboards). Last updated 2026-11-17, after PRs #38/#39 deployed.
+Remaining manual checks (GA4 Realtime + issue #27 browser items). Both env-var setup items were finished 2026-11-17 — see sections 1–2.
 
-## 1. GA4_API_SECRET — enables the funnel events
+## 1. GA4_API_SECRET — secret is SET (verified 2026-11-17)
 
-**Status:** client gtag already live (`GA_MEASUREMENT_ID=G-8LRWH2J04P` worker var). Only the Measurement Protocol secret is missing; server events silently no-op without it.
+**Status:** `GA4_API_SECRET` exists on the Worker (`wrangler secret list` shows it as `secret_text`) and client gtag is live (`GA_MEASUREMENT_ID=G-8LRWH2J04P` worker var). Nothing left to create.
 
-**Steps:**
+**Optional browser check (Realtime):**
 
-1. Open [analytics.google.com](https://analytics.google.com) (account `gibtang@gmail.com`).
-2. Switch to account **Form Like** (`415124837`) → property **form-like.com** (`properties/562820660`). Do NOT create a new property — reuse decision recorded in issue #29.
-3. Admin (gear) → **Data streams** → web stream **Form Like Web** — measurement ID `G-8LRWH2J04P`, stream ID `16282348314`, URL `https://form-like.com`.
-4. Scroll to **Measurement Protocol** → **API secrets** → **Create**.
-   - Name: `formlike-funnel` (anything descriptive).
-   - Copy the secret value immediately (shown once).
+1. Visit [form-like.com/create](https://form-like.com/create) in one tab, GA4 → Reports → **Realtime** ([property `properties/562820660`](https://analytics.google.com), account **Form Like** `415124837` — reuse, never duplicate, per issue #29) in another.
+2. `form_create_started` should appear within ~30s (client gtag); `signup_completed` / `form_published` / `submission_received` / `upgrade_started` / `upgrade_completed` fire server-side on those actions.
+3. Your `gibtang@gmail.com` account is excluded from analytics by `ANALYTICS_EXCLUDED_EMAILS` only for server-side MP events; use another Google account for a visible client event, or check Network tab for `google-analytics.com/g/collect` hits.
 
-**Where to put it** — either works:
+**Env var contract** (already documented in `apps/web/.env.example`): `GA_MEASUREMENT_ID` (set, worker var) + `GA4_API_SECRET` (set, worker secret).
 
-- CLI (from `apps/web/` in the repo; token + account from `credentials.md` → Cloudflare):
+## 2. ALERTS_PROJECT_KEY — DONE by agent 2026-11-17, no browser needed
 
-  ```sh
-  export CLOUDFLARE_API_TOKEN=<cf token> CLOUDFLARE_ACCOUNT_ID=0af4eab452c61ba50b9b84753bf2a5aa
-  pnpm exec wrangler secret put GA4_API_SECRET
-  # paste the secret when prompted
-  ```
-
-- Dashboard: [Cloudflare dash → Workers & Pages → form-like → Settings → Variables & Secrets](https://dash.cloudflare.com/0af4eab452c61ba50b9b84753bf2a5aa/workers/services/view/form-like) → **Add variable** → type **Secret**, name `GA4_API_SECRET` → Deploy.
-
-Secrets survive `wrangler deploy`; no redeploy needed after setting.
-
-**Verify it works:**
-
-1. Visit [form-like.com/create](https://form-like.com/create) in one tab, GA4 → Reports → **Realtime** in another.
-2. `form_create_started` should appear within ~30s (client gtag), `signup_completed` / `form_published` / `submission_received` / `upgrade_started` / `upgrade_completed` fire server-side on those actions.
-3. Note: your `gibtang@gmail.com` account is excluded from analytics by `ANALYTICS_EXCLUDED_EMAILS` only for server-side MP events; use another Google account for a visible client event, or check Network tab for `google-analytics.com/g/collect` hits.
-
-**Env var contract** (already documented in `apps/web/.env.example`): `GA_MEASUREMENT_ID` (set, worker var) + `GA4_API_SECRET` (this step).
-
-## 2. ALERTS_PROJECT_KEY — arms server-error alerting
-
-**Status:** `ALERTS_ENDPOINT=https://simple-alerts.feedcode.dev/api/ingest` is already set as a worker var (PR #39). Reporter stays a no-op until the project key exists.
-
-**Steps:**
-
-1. Open [simple-alerts.feedcode.dev](https://simple-alerts.feedcode.dev) (self-hosted Simple Alerts).
-2. Open the project provisioned for **form-like** → **Settings/Keys** → copy the **project ingest key**. (If no project exists yet, create one named `form-like` and copy the key it issues.)
-
-**Where to put it** — same two options as above:
-
-- CLI (from `apps/web/`):
-
-  ```sh
-  export CLOUDFLARE_API_TOKEN=<cf token> CLOUDFLARE_ACCOUNT_ID=0af4eab452c61ba50b9b84753bf2a5aa
-  pnpm exec wrangler secret put ALERTS_PROJECT_KEY
-  # paste the key when prompted
-  ```
-
-- Dashboard: same Variables & Secrets page as above → **Add variable** → type **Secret**, name `ALERTS_PROJECT_KEY`.
-
-**Verify it works:**
-
-1. Hit any 5xx route on prod, e.g. `curl -s -o /dev/null -w '%{http_code}\n' https://form-like.com/dashboard` while signed out (401/302s don't alert — the reporter pages on 5xx).
-2. Simplest deterministic check: [simple-alerts.feedcode.dev](https://simple-alerts.feedcode.dev) project inbox should show the heartbeat/test entry from the next real error. The reporter has a 4xx cooldown and always pages on 5xx (pattern copied from hotel-like `src/lib/notify.ts`).
+Key was already provisioned server-side: project `form-like` exists in `/opt/simple-alerts/alerts.example.yaml` (mounted as the live config) with `FORM_LIKE_REPORTING_KEY` in `/opt/simple-alerts/.env` on VPS `66.70.190.82`. Agent verified ingest (HTTP 202) and set the Worker secret via `wrangler secret put ALERTS_PROJECT_KEY`.
 
 ## 3. Also pending (issue #27, browser)
 
