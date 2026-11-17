@@ -3,6 +3,11 @@
   "name": "form-like",
   "main": ".open-next/worker.js",
   "compatibility_date": "2025-05-05",
+  "vars": {
+    "BASE_URL": "https://form-like.com",
+    "GA_MEASUREMENT_ID": "G-8LRWH2J04P",
+    "ALERTS_ENDPOINT": "https://simple-alerts.feedcode.dev/api/ingest"
+  },
   "compatibility_flags": [
     "nodejs_compat",
     "global_fetch_strictly_public"
